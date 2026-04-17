@@ -36,6 +36,7 @@
         "<all_urls>"
       ],
       "js": [
+        "vendor/quill/quill.min.js",
         "content.js"
       ],
       "all_frames": true,
@@ -51,7 +52,10 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["modal.css"],
+      "resources": [
+        "modal.css",
+        "vendor/quill/quill.snow.css"
+      ],
       "matches": ["<all_urls>"]
     }
   ]

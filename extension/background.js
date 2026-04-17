@@ -76,6 +76,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.data.openSidebar || settings.preferredEditor === 'sidebar') {
       console.log('[MailLayer Background] Opening Sidebar (Manual or Setting)');
       chrome.sidePanel.open({ tabId: sender.tab.id });
+      sendResponse({ action: 'sidebar_opening' });
     } else {
       console.log('[MailLayer Background] Attempting Modal injection...');
       
@@ -99,6 +100,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           chrome.runtime.onMessage.removeListener(confirmationListener);
         }
       }, 750);
+
+      sendResponse({ action: 'modal_opening' });
     }
     return true; // Keep channel open
   }

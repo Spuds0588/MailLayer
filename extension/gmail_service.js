@@ -45,27 +45,52 @@ class GmailService {
 
   /**
    * Encodes message into the "Raw" format required by Gmail API.
-   * Includes To, Subject, and Body.
+   * Supports HTML (Multipart/Alternative).
    */
   static createRawMessage(data) {
+    const boundary = '----MailLayerBoundary' + Math.random().toString(16).slice(2);
+    
+    // Create MIME headers
     const headers = [
       `To: ${data.to}`,
       `Subject: ${data.subject}`,
-      'Content-Type: text/plain; charset=utf-8',
-      'MIME-Version: 1.0'
+      'MIME-Version: 1.0',
+      `Content-Type: multipart/alternative; boundary="${boundary}"`
     ];
 
     if (data.cc) headers.push(`Cc: ${data.cc}`);
     if (data.bcc) headers.push(`Bcc: ${data.bcc}`);
 
+    // Plain text fallback (strip HTML)
+    const plainText = data.body.replace(/<[^>]*>/g, '');
+
     const email = [
       ...headers,
       '',
-      data.body
+      `--${boundary}`,
+      'Content-Type: text/plain; charset=utf-8',
+      'Content-Transfer-Encoding: 7bit',
+      '',
+      plainText,
+      '',
+      `--${boundary}`,
+      'Content-Type: text/html; charset=utf-8',
+      'Content-Transfer-Encoding: 7bit',
+      '',
+      data.body,
+      '',
+      `--${boundary}--`
     ].join('\r\n');
 
-    // Base64url safe encoding
-    return btoa(unescape(encodeURIComponent(email)))
+    // Robust Base64url safe encoding (TextEncoder handles UTF-8 correctly)
+    const bytes = new TextEncoder().encode(email);
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    
+    return btoa(binary)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');

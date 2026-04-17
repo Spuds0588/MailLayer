@@ -1,125 +1,222 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MailLayer Sidebar</title>
-    <link rel="stylesheet" href="bulma.min.css">
+    <meta charset="UTF-8">
+    <title>MailLayer — Compose</title>
+    <link rel="stylesheet" href="vendor/quill/quill.snow.css">
     <style>
         :root {
-            --blackberry-cream: #58355e;
             --burnt-tangerine: #e03616;
-            --banana-cream: #fff689;
-            --tea-green: #cfffb0;
-            --blue-bell: #5998c5;
+            --black: #0c0c0c;
+            --dark-grey: #1a1a1a;
+            --white: #ffffff;
         }
 
         body {
-            background-color: #0c0c0c;
-            color: white;
-            padding: 1rem;
+            background-color: var(--black);
+            color: var(--white);
+            font-family: 'Inter', -apple-system, sans-serif;
             height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--burnt-tangerine);
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+        }
+
+        .field {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .field input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .field input:focus {
+            border-color: var(--burnt-tangerine);
+        }
+
+        /* Quill Sidebar Styles */
+        #editor-container {
+            flex: 1;
+            min-height: 0;
+            background: #111;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
         }
 
-        .header {
-            border-bottom: 2px solid var(--burnt-tangerine);
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
+        .ql-toolbar.ql-snow {
+            border: none !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background: #1a1a1a !important;
+        }
+
+        .ql-container.ql-snow {
+            border: none !important;
+            flex: 1;
+            min-height: 0;
             display: flex;
-            align-items: center;
+            flex-direction: column;
         }
 
-        .label {
-            color: #9ca3af !important;
-            font-size: 0.75rem;
-            text-transform: uppercase;
+        .ql-editor {
+            color: #eee !important;
+            flex: 1;
+            overflow-y: auto;
+            font-size: 0.95rem;
         }
 
-        .input, .textarea {
-            background: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            color: white !important;
-            border-radius: 8px !important;
+        .ql-editor.ql-blank::before {
+            color: #4b5563 !important;
         }
 
-        .input:focus, .textarea:focus {
-            border-color: var(--blue-bell) !important;
-            box-shadow: 0 0 0 0.125rem rgba(89, 152, 197, 0.25) !important;
+        .ql-snow .ql-stroke { stroke: #eee !important; }
+        .ql-snow .ql-fill { fill: #eee !important; }
+        .ql-snow .ql-picker { color: #eee !important; }
+        
+        /* Active state icons */
+        .ql-snow.ql-toolbar button:hover .ql-stroke,
+        .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+            stroke: var(--burnt-tangerine) !important;
+        }
+        .ql-snow.ql-toolbar button:hover .ql-fill,
+        .ql-snow.ql-toolbar button.ql-active .ql-fill {
+            fill: var(--burnt-tangerine) !important;
         }
 
-        .button.is-primary {
-            background-color: var(--burnt-tangerine) !important;
-            font-weight: bold;
+        .actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .send-btn {
+            flex: 1;
+            background: var(--burnt-tangerine);
+            color: white;
             border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #ff4d2e;
+            transform: translateY(-1px);
+        }
+
+        .send-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .discard-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .discard-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
         }
 
         .status-msg {
-            font-size: 0.85rem;
-            margin-top: 1rem;
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
             text-align: center;
-        }
-
-        /* Hide fields if not needed initially */
-        .optional-field {
-            display: none;
-        }
-        .optional-field.visible {
-            display: block;
+            color: #9ca3af;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="margin-right: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--burnt-tangerine)">
             <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
         </svg>
-        <h1 class="subtitle is-5 has-text-white">MailLayer Compose</h1>
+        <h1>MailLayer</h1>
     </div>
 
-    <div id="composer">
-        <div class="field">
-            <label class="label">Recipient</label>
-            <div class="control">
-                <input class="input" type="text" id="ml-to" placeholder="to@example.com">
-            </div>
-        </div>
-
-        <div class="field optional-field" id="cc-field">
-            <label class="label">CC</label>
-            <div class="control">
-                <input class="input" type="text" id="ml-cc">
-            </div>
-        </div>
-
-        <div class="field optional-field" id="bcc-field">
-            <label class="label">BCC</label>
-            <div class="control">
-                <input class="input" type="text" id="ml-bcc">
-            </div>
-        </div>
-
-        <div class="field">
-            <label class="label">Subject</label>
-            <div class="control">
-                <input class="input" type="text" id="ml-subject" placeholder="Enter subject...">
-            </div>
-        </div>
-
-        <div class="field is-flex-grow-1">
-            <label class="label">Message</label>
-            <div class="control h-100">
-                <textarea class="textarea" id="ml-body" rows="12" placeholder="Compose your email..."></textarea>
-            </div>
-        </div>
-
-        <div class="buttons mt-5">
-            <button id="discard-btn" class="button is-light is-flex-grow-1">Discard</button>
-            <button id="send-btn" class="button is-primary is-flex-grow-1">Send</button>
-        </div>
-
-        <div id="status" class="status-msg"></div>
+    <div class="field">
+        <label>Recipient</label>
+        <input type="text" id="ml-to" placeholder="to@example.com">
     </div>
 
+    <div class="field">
+        <label>CC</label>
+        <input type="text" id="ml-cc">
+    </div>
+
+    <div class="field">
+        <label>BCC</label>
+        <input type="text" id="ml-bcc">
+    </div>
+
+    <div class="field">
+        <label>Subject</label>
+        <input type="text" id="ml-subject" placeholder="Enter subject...">
+    </div>
+
+    <div class="field" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+        <label>Message</label>
+        <div id="editor-container"></div>
+    </div>
+
+    <div class="actions">
+        <button class="discard-btn" id="discard-btn">Discard</button>
+        <button class="send-btn" id="send-btn">Send</button>
+    </div>
+
+    <div id="status" class="status-msg"></div>
+
+    <script src="vendor/quill/quill.min.js"></script>
     <script src="sidebar.js"></script>
 </body>
 </html>

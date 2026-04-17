@@ -78,113 +78,164 @@ function escapeHTML(str) {
  * Implementation of the "Ghost Injection Pattern" for the in-page modal.
  */
 function openModal(data) {
-  if (document.getElementById('maillayer-root')) return;
+  if (document.getElementById('maillayer-modal-root')) return;
 
-  const host = document.createElement('div');
-  host.id = 'maillayer-root';
-  document.documentElement.appendChild(host);
-
-  const shadow = host.attachShadow({ mode: 'open' });
-
-  const styleLink = document.createElement('link');
-  styleLink.rel = 'stylesheet';
-  styleLink.href = chrome.runtime.getURL('modal.css');
-  shadow.appendChild(styleLink);
-
-  const overlay = document.createElement('div');
-  overlay.className = 'maillayer-modal-overlay';
-  
   const container = document.createElement('div');
-  container.className = 'maillayer-modal-container';
-  
+  container.id = 'maillayer-modal-root';
+  document.body.appendChild(container);
+
   container.innerHTML = `
-    <div class="maillayer-header" id="maillayer-drag-handle">
-        <div style="display:flex; align-items:center;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#e03616" style="margin-right:10px;">
-            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-          </svg>
-          <h2 style="margin:0; font-size:16px; color: white;">MailLayer Compose</h2>
+    <div class="maillayer-modal-overlay">
+      <div class="maillayer-modal-container">
+        <div class="maillayer-header" id="maillayer-drag-handle">
+          <div style="display:flex; align-items:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff" style="margin-right:10px;">
+              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+            <h2 style="margin:0; font-size:16px; color: white;">MailLayer Compose</h2>
+          </div>
+          <button class="maillayer-close-btn" aria-label="Close">&times;</button>
         </div>
-        <button class="maillayer-close-btn">&times;</button>
-    </div>
-    <div class="maillayer-body">
-        <div class="maillayer-field">
-            <label>To</label>
-            <input type="text" id="ml-to" value="${escapeHTML(data.to)}">
+        <div class="maillayer-body">
+            <div class="maillayer-field">
+                <label>Recipient</label>
+                <input type="text" id="ml-to" value="${escapeHTML(data.to)}">
+            </div>
+            <div class="maillayer-field">
+                <label>CC</label>
+                <input type="text" id="ml-cc" value="${escapeHTML(data.cc || '')}">
+            </div>
+            <div class="maillayer-field">
+                <label>BCC</label>
+                <input type="text" id="ml-bcc" value="${escapeHTML(data.bcc || '')}">
+            </div>
+            <div class="maillayer-field">
+                <label>Subject</label>
+                <input type="text" id="ml-subject" value="${escapeHTML(data.subject)}">
+            </div>
+            <div class="maillayer-field">
+                <label>Message</label>
+                <div id="ml-editor-container" style="min-height: 250px;"></div>
+            </div>
         </div>
-        ${data.cc ? `
-        <div class="maillayer-field">
-            <label>CC</label>
-            <input type="text" id="ml-cc" value="${escapeHTML(data.cc)}">
-        </div>` : ''}
-        ${data.bcc ? `
-        <div class="maillayer-field">
-            <label>BCC</label>
-            <input type="text" id="ml-bcc" value="${escapeHTML(data.bcc)}">
-        </div>` : ''}
-        <div class="maillayer-field">
-            <label>Subject</label>
-            <input type="text" id="ml-subject" value="${escapeHTML(data.subject)}">
+        <div class="maillayer-footer">
+            <button class="maillayer-btn maillayer-btn-secondary close-action">Discard</button>
+            <button class="maillayer-btn maillayer-btn-primary">Send Email</button>
         </div>
-        <div class="maillayer-field">
-            <label>Message</label>
-            <textarea id="ml-body">${escapeHTML(data.body)}</textarea>
-        </div>
-    </div>
-    <div class="maillayer-footer">
-        <button class="maillayer-btn maillayer-btn-secondary close-action">Discard</button>
-        <button class="maillayer-btn maillayer-btn-primary">Send Email</button>
+      </div>
     </div>
   `;
 
-  overlay.appendChild(container);
-  shadow.appendChild(overlay);
+  // Inject Styles into Head
+  if (!document.getElementById('maillayer-styles')) {
+    const modalStyle = document.createElement('link');
+    modalStyle.id = 'maillayer-styles';
+    modalStyle.rel = 'stylesheet';
+    modalStyle.href = chrome.runtime.getURL('modal.css');
+    document.head.appendChild(modalStyle);
+  }
 
-  const closeModal = () => host.remove();
-  shadow.querySelector('.maillayer-close-btn').onclick = closeModal;
-  shadow.querySelector('.close-action').onclick = closeModal;
+  if (!document.getElementById('quill-styles')) {
+    const quillStyle = document.createElement('link');
+    quillStyle.id = 'quill-styles';
+    quillStyle.rel = 'stylesheet';
+    quillStyle.href = chrome.runtime.getURL('vendor/quill/quill.snow.css');
+    document.head.appendChild(quillStyle);
+  }
+
+  const closeModal = () => container.remove();
+  container.querySelector('.maillayer-close-btn').onclick = closeModal;
+  container.querySelector('.close-action').onclick = closeModal;
+
+  // Initialize Quill
+  const quill = new Quill(container.querySelector('#ml-editor-container'), {
+    theme: 'snow',
+    placeholder: 'Write your message...',
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link', 'clean']
+      ]
+    }
+  });
+  
+  // Set initial content if any
+  if (data.body) {
+    quill.clipboard.dangerouslyPasteHTML(data.body);
+  }
+
+  container._mlQuill = quill;
 
   // Drag Logic
-  const handle = shadow.getElementById('maillayer-drag-handle');
+  const handle = container.querySelector('#maillayer-drag-handle');
+  const modalBox = container.querySelector('.maillayer-modal-container');
   let isDragging = false;
   let offsetX, offsetY;
 
   handle.onmousedown = (e) => {
     isDragging = true;
-    offsetX = e.clientX - container.getBoundingClientRect().left;
-    offsetY = e.clientY - container.getBoundingClientRect().top;
-    container.style.position = 'absolute';
-    container.style.margin = '0';
+    offsetX = e.clientX - modalBox.getBoundingClientRect().left;
+    offsetY = e.clientY - modalBox.getBoundingClientRect().top;
   };
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    container.style.left = (e.clientX - offsetX) + 'px';
-    container.style.top = (e.clientY - offsetY) + 'px';
+    modalBox.style.left = (e.clientX - offsetX + modalBox.offsetWidth/2) + 'px';
+    modalBox.style.top = (e.clientY - offsetY + modalBox.offsetHeight/2) + 'px';
   });
 
   document.addEventListener('mouseup', () => isDragging = false);
 
-  const sendBtn = shadow.querySelector('.maillayer-btn-primary');
+  const sendBtn = container.querySelector('.maillayer-btn-primary');
   sendBtn.onclick = () => {
+    const originalText = sendBtn.innerText;
     sendBtn.innerText = 'Sending...';
     sendBtn.disabled = true;
     
+    // Get HTML from Quill
+    const htmlBody = container._mlQuill.root.innerHTML;
+
     const updatedData = {
-        to: shadow.getElementById('ml-to').value,
-        cc: shadow.getElementById('ml-cc')?.value || '',
-        bcc: shadow.getElementById('ml-bcc')?.value || '',
-        subject: shadow.getElementById('ml-subject').value,
-        body: shadow.getElementById('ml-body').value,
+        to: container.querySelector('#ml-to').value,
+        cc: container.querySelector('#ml-cc')?.value || '',
+        bcc: container.querySelector('#ml-bcc')?.value || '',
+        subject: container.querySelector('#ml-subject').value,
+        body: htmlBody,
         sendDirectly: true
     };
 
-    chrome.runtime.sendMessage({ action: 'intercept_mailto', data: updatedData }, (response) => {
-        // Handle response if needed
-    });
-    
-    // Auto-close after a short delay for UX
-    setTimeout(closeModal, 1500);
+    console.log('[MailLayer] Sending message to background...', updatedData);
+
+    try {
+        chrome.runtime.sendMessage({ action: 'intercept_mailto', data: updatedData }, (response) => {
+            console.log('[MailLayer] Received response from background:', response);
+            
+            if (chrome.runtime.lastError) {
+                console.error('[MailLayer] Send failed (lastError):', chrome.runtime.lastError);
+                sendBtn.innerText = 'Error: Reload Page';
+                alert('Connection to extension lost. Please refresh the page.');
+                setTimeout(() => { sendBtn.innerText = originalText; sendBtn.disabled = false; }, 3000);
+                return;
+            }
+
+            if (response && response.action === 'send_success') {
+                console.log('[MailLayer] Send successful reported by background.');
+                sendBtn.innerText = '✅ Sent!';
+                setTimeout(closeModal, 1000);
+            } else {
+                console.error('[MailLayer] Send failed reported by background:', response?.error);
+                sendBtn.innerText = '❌ Failed';
+                alert('Send failed: ' + (response?.error || 'Unknown error'));
+                sendBtn.innerText = originalText;
+                sendBtn.disabled = false;
+            }
+        });
+    } catch (e) {
+        console.error('[MailLayer] Critical error sending message:', e);
+        alert('Extension context invalidated. Please refresh the page.');
+        sendBtn.innerText = 'Error: Refresh Page';
+    }
   };
 
   chrome.runtime.sendMessage({ action: 'modal_ready' }); 

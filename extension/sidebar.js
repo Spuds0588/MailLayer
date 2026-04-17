@@ -1,106 +1,103 @@
-// MailLayer Sidebar Logic
-// Handles API-driven sending from the Chrome Side Panel
+// MailLayer Sidebar Controller
+// Handles API-driven sending from the Chrome Side Panel with Quill.js
 
-const statusEl = document.getElementById('status');
-const sendBtn = document.getElementById('send-btn');
-const discardBtn = document.getElementById('discard-btn');
+let quill;
 
-/**
- * Updates the sidebar form with draft data
- */
-async function updateSidebar() {
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    initEditor();
+    loadDraft();
+    setupListeners();
+});
+
+// Initialize Quill
+function initEditor() {
+    quill = new Quill('#editor-container', {
+        theme: 'snow',
+        placeholder: 'Compose your email...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'clean']
+            ]
+        }
+    });
+}
+
+// Load draft from storage
+async function loadDraft() {
     const { currentDraft } = await chrome.storage.local.get(['currentDraft']);
-    
-    // Clear first if no draft
-    if (!currentDraft) {
-        document.getElementById('ml-to').value = '';
-        document.getElementById('ml-subject').value = '';
-        document.getElementById('ml-body').value = '';
-        document.getElementById('cc-field').classList.remove('visible');
-        document.getElementById('bcc-field').classList.remove('visible');
-        return;
-    }
-
-    document.getElementById('ml-to').value = currentDraft.to || '';
-    document.getElementById('ml-subject').value = currentDraft.subject || '';
-    document.getElementById('ml-body').value = currentDraft.body || '';
-    
-    if (currentDraft.cc) {
-        document.getElementById('cc-field').classList.add('visible');
-        document.getElementById('ml-cc').value = currentDraft.cc;
-    } else {
-        document.getElementById('cc-field').classList.remove('visible');
-    }
-
-    if (currentDraft.bcc) {
-        document.getElementById('bcc-field').classList.add('visible');
-        document.getElementById('ml-bcc').value = currentDraft.bcc;
-    } else {
-        document.getElementById('bcc-field').classList.remove('visible');
+    if (currentDraft) {
+        document.getElementById('ml-to').value = currentDraft.to || '';
+        document.getElementById('ml-cc').value = currentDraft.cc || '';
+        document.getElementById('ml-bcc').value = currentDraft.bcc || '';
+        document.getElementById('ml-subject').value = currentDraft.subject || '';
+        if (currentDraft.body) {
+            if (currentDraft.body.includes('<')) {
+                quill.clipboard.dangerouslyPasteHTML(currentDraft.body);
+            } else {
+                quill.setText(currentDraft.body);
+            }
+        }
     }
 }
 
-/**
- * Discards the current draft
- */
-const discardDraft = async () => {
-    await chrome.storage.local.remove('currentDraft');
-    updateSidebar();
-    statusEl.innerText = 'Draft Discarded';
-    setTimeout(() => { statusEl.innerText = ''; }, 2000);
-};
+// Event Listeners
+function setupListeners() {
+    const sendBtn = document.getElementById('send-btn');
+    const discardBtn = document.getElementById('discard-btn');
+    const statusDiv = document.getElementById('status');
 
-/**
- * Sends the email via background worker
- */
-const sendEmail = async () => {
-    sendBtn.innerText = 'Sending...';
-    sendBtn.disabled = true;
-    discardBtn.disabled = true;
+    sendBtn.addEventListener('click', () => {
+        const originalText = sendBtn.innerText;
+        sendBtn.innerText = 'Sending...';
+        sendBtn.disabled = true;
+        statusDiv.innerText = '';
 
-    const data = {
-        to: document.getElementById('ml-to').value,
-        cc: document.getElementById('ml-cc')?.value || '',
-        bcc: document.getElementById('ml-bcc')?.value || '',
-        subject: document.getElementById('ml-subject').value,
-        body: document.getElementById('ml-body').value,
-        sendDirectly: true
-    };
+        const updatedData = {
+            to: document.getElementById('ml-to').value,
+            cc: document.getElementById('ml-cc').value,
+            bcc: document.getElementById('ml-bcc').value,
+            subject: document.getElementById('ml-subject').value,
+            body: quill.root.innerHTML, // Get HTML from Quill
+            sendDirectly: true
+        };
 
-    chrome.runtime.sendMessage({ action: 'intercept_mailto', data });
-};
+        chrome.runtime.sendMessage({ action: 'intercept_mailto', data: updatedData }, (response) => {
+            if (chrome.runtime.lastError) {
+                statusDiv.innerText = 'Error: Connection lost. Refresh page.';
+                sendBtn.innerText = originalText;
+                sendBtn.disabled = false;
+                return;
+            }
 
-// Listen for success/error from background
-chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === 'send_success') {
-        statusEl.innerText = '🚀 Email Sent Successfully!';
-        statusEl.style.color = '#cfffb0';
-        chrome.storage.local.remove('currentDraft');
-        setTimeout(() => {
-            statusEl.innerText = '';
-            sendBtn.innerText = 'Send';
-            sendBtn.disabled = false;
-            discardBtn.disabled = false;
-            updateSidebar();
-        }, 3000);
-    } else if (message.action === 'send_error') {
-        statusEl.innerText = '❌ Error: ' + message.error;
-        statusEl.style.color = '#e03616';
-        sendBtn.disabled = false;
-        discardBtn.disabled = false;
-        sendBtn.innerText = 'Try Again';
-    }
-});
+            if (response && response.action === 'send_success') {
+                statusDiv.innerText = '✅ Message sent successfully!';
+                sendBtn.innerText = 'Sent!';
+                setTimeout(() => window.close(), 1500);
+            } else {
+                statusDiv.innerText = '❌ ' + (response?.error || 'Unknown error');
+                sendBtn.innerText = originalText;
+                sendBtn.disabled = false;
+            }
+        });
+    });
 
-sendBtn.onclick = sendEmail;
-discardBtn.onclick = discardDraft;
+    discardBtn.addEventListener('click', async () => {
+        if (confirm('Discard this draft?')) {
+            await chrome.storage.local.remove('currentDraft');
+            window.close();
+        }
+    });
+}
 
-// Listen for storage changes
+// Listen for storage changes to sync draft if sidebar is open
 chrome.storage.onChanged.addListener((changes) => {
-    if (changes.currentDraft) {
-        updateSidebar();
+    if (changes.currentDraft && !changes.currentDraft.newValue) {
+        // Draft was removed
+        document.getElementById('ml-to').value = '';
+        document.getElementById('ml-subject').value = '';
+        quill.setText('');
     }
 });
-
-// Initial load
-document.addEventListener('DOMContentLoaded', updateSidebar);

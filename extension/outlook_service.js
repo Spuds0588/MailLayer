@@ -17,7 +17,7 @@ class OutlookService {
         message: {
           subject: data.subject,
           body: {
-            contentType: 'Text',
+            contentType: 'HTML',
             content: data.body
           },
           toRecipients: [
@@ -52,25 +52,34 @@ class OutlookService {
   static getAccessToken() {
     return new Promise((resolve, reject) => {
       const redirectUri = chrome.identity.getRedirectURL();
+      const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
-                      `client_id=${this.CLIENT_ID}&` +
-                      `response_type=token&` +
-                      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-                      `scope=${encodeURIComponent(this.SCOPES.join(' '))}&` +
-                      `response_mode=fragment`;
+        `client_id=${this.CLIENT_ID}&` +
+        `response_type=token&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=${encodeURIComponent(this.SCOPES)}&` +
+        `response_mode=fragment&` +
+        `state=maillayer&` +
+        `nonce=${nonce}`;
+
+      console.log('[MailLayer OutlookService] Launching Auth Flow...', authUrl);
 
       chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (responseUrl) => {
-        if (chrome.runtime.lastError || !responseUrl) {
-          reject(chrome.runtime.lastError || new Error('Auth failed'));
-          return;
+        if (chrome.runtime.lastError) {
+          return reject(chrome.runtime.lastError);
+        }
+        
+        if (!responseUrl) {
+          return reject(new Error('No response URL from Microsoft'));
         }
 
         const url = new URL(responseUrl.replace('#', '?'));
         const token = url.searchParams.get('access_token');
+        
         if (token) {
           resolve(token);
         } else {
-          reject(new Error('No token in response'));
+          reject(new Error('Access token not found in response'));
         }
       });
     });
