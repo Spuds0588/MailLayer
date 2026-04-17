@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MailLayer Sidebar</title>
+    <link rel="stylesheet" href="bulma.min.css">
+    <style>
+        :root {
+            --blackberry-cream: #58355e;
+            --burnt-tangerine: #e03616;
+            --banana-cream: #fff689;
+            --tea-green: #cfffb0;
+            --blue-bell: #5998c5;
+        }
+
+        body {
+            background-color: #0c0c0c;
+            color: white;
+            padding: 1rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--burnt-tangerine);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .label {
+            color: #9ca3af !important;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .input, .textarea {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border-radius: 8px !important;
+        }
+
+        .input:focus, .textarea:focus {
+            border-color: var(--blue-bell) !important;
+            box-shadow: 0 0 0 0.125rem rgba(89, 152, 197, 0.25) !important;
+        }
+
+        .button.is-primary {
+            background-color: var(--burnt-tangerine) !important;
+            font-weight: bold;
+            border: none;
+        }
+
+        .status-msg {
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        /* Hide fields if not needed initially */
+        .optional-field {
+            display: none;
+        }
+        .optional-field.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="margin-right: 10px;">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <h1 class="subtitle is-5 has-text-white">MailLayer Compose</h1>
+    </div>
+
+    <div id="composer">
+        <div class="field">
+            <label class="label">Recipient</label>
+            <div class="control">
+                <input class="input" type="text" id="ml-to" placeholder="to@example.com">
+            </div>
+        </div>
+
+        <div class="field optional-field" id="cc-field">
+            <label class="label">CC</label>
+            <div class="control">
+                <input class="input" type="text" id="ml-cc">
+            </div>
+        </div>
+
+        <div class="field optional-field" id="bcc-field">
+            <label class="label">BCC</label>
+            <div class="control">
+                <input class="input" type="text" id="ml-bcc">
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label">Subject</label>
+            <div class="control">
+                <input class="input" type="text" id="ml-subject" placeholder="Enter subject...">
+            </div>
+        </div>
+
+        <div class="field is-flex-grow-1">
+            <label class="label">Message</label>
+            <div class="control h-100">
+                <textarea class="textarea" id="ml-body" rows="12" placeholder="Compose your email..."></textarea>
+            </div>
+        </div>
+
+        <div class="buttons mt-5">
+            <button id="discard-btn" class="button is-light is-flex-grow-1">Discard</button>
+            <button id="send-btn" class="button is-primary is-flex-grow-1">Send</button>
+        </div>
+
+        <div id="status" class="status-msg"></div>
+    </div>
+
+    <script src="sidebar.js"></script>
+</body>
+</html>

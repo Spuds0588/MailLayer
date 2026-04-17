@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailLayer — Interception Test Lab</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <style>
+        body { background-color: #0c0c0c; color: #fff; font-family: 'Inter', sans-serif; padding: 4rem 2rem; }
+        .test-card { 
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 16px; 
+            padding: 2rem; 
+            margin-bottom: 2rem;
+            transition: transform 0.2s;
+        }
+        .test-card:hover { transform: translateY(-5px); border-color: #e03616; }
+        .title { color: #fff !important; }
+        .button.is-primary { background-color: #e03616; border: none; font-weight: 700; }
+        code { background: #222; color: #fff689; padding: 0.2rem 0.5rem; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container is-max-desktop">
+        <h1 class="title is-2 mb-6">MailLayer Test Lab</h1>
+        <p class="subtitle has-text-grey mb-6">Verify interception and API parsing across various complexity levels.</p>
+
+        <!-- Scenario 1 -->
+        <div class="test-card">
+            <h2 class="title is-4">1. Basic Link</h2>
+            <p class="mb-4">Simple recipient only.</p>
+            <a href="mailto:burnsdevfeedback@gmail.com" class="button is-primary is-rounded">Simple Send</a>
+            <p class="is-size-7 mt-3"><code>mailto:burnsdevfeedback@gmail.com</code></p>
+        </div>
+
+        <!-- Scenario 2 -->
+        <div class="test-card">
+            <h2 class="title is-4">2. Subject & Body</h2>
+            <p class="mb-4">Standard marketing link or feedback button.</p>
+            <a href="mailto:burnsdevfeedback@gmail.com?subject=MailLayer%20Feedback&body=Hi%20Corey,%20the%20extension%20is%20looking%20great!" class="button is-primary is-rounded">Send Feedback</a>
+            <p class="is-size-7 mt-3"><code>mailto:...?subject=...&body=...</code></p>
+        </div>
+
+        <!-- Scenario 3 -->
+        <div class="test-card" style="border-left: 4px solid #fff689;">
+            <h2 class="title is-4">3. Pro Link (CC/BCC)</h2>
+            <p class="mb-4">Complex business workflow with multiple recipients.</p>
+            <a href="mailto:burnsdevfeedback@gmail.com?cc=test-cc@gmail.com&bcc=secret@gmail.com&subject=Project%20Update&body=Please%20review%20the%20attached%20proposal." class="button is-primary is-rounded">Complex Workflow</a>
+            <p class="is-size-7 mt-3"><code>mailto:...?cc=...&bcc=...</code></p>
+        </div>
+
+        <!-- Scenario 4 -->
+        <div class="test-card" style="border-left: 4px solid #5998c5;">
+            <h2 class="title is-4">4. Special Characters</h2>
+            <p class="mb-4">Testing encoding/decoding robustness.</p>
+            <a href="mailto:burnsdevfeedback@gmail.com?subject=Special%20Characters%20%26%20Symbols&body=Quotes%20%22like%20this%22%20and%20slashes%20/%20and%20dashes%20---" class="button is-primary is-rounded">Stress Test</a>
+            <p class="is-size-7 mt-3"><code>mailto:...?subject=...%26...%22...</code></p>
+        </div>
+
+        <footer class="mt-6 has-text-centered has-text-grey is-size-7">
+            MailLayer Lab • Local testing suite
+        </footer>
+    </div>
+</body>
+</html>

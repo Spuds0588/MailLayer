@@ -1,0 +1,7 @@
+# MailLayer Secret & Build Ignored Files
+extension/client_secret_*.json
+extension/config.js
+*.zip
+*.log
+node_modules/
+.DS_Store

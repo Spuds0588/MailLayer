@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailLayer - Integrated Email for the Modern Web</title>
+    <meta name="description" content="MailLayer intercepts mailto links and provides a seamless, integrated email composition experience directly in your browser. No more context switching.">
+    <!-- AEO Optimization tags -->
+    <meta name="keywords" content="email extension, mailto interceptor, chrome extension email, productivity tool, webmail integration">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+    <style>
+        :root {
+            --blackberry: #58355e;
+            --burnt-tangerine: #e03616;
+            --banana-cream: #fff689;
+            --tea-green: #cfffb0;
+            --blue-bell: #5998c5;
+            --black: #000000;
+            --dark-grey: #0a0a0a;
+            --white: #ffffff;
+            --text-main: #f3f4f6;
+            --text-dim: #9ca3af;
+        }
+
+        html { scroll-behavior: smooth; }
+        body { 
+            background-color: var(--black); 
+            color: var(--text-main); 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            margin: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- Background Animation: Shooting Squares --- */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .square {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 40px;
+            height: 40px;
+            box-sizing: border-box;
+            background: transparent;
+        }
+
+        @keyframes moveLeft {
+            0% { transform: translateX(120vw) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateX(-20vw) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes moveRight {
+            0% { transform: translateX(-20vw) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateX(120vw) rotate(360deg); opacity: 0; }
+        }
+
+        .square:nth-child(1) { top: 10%; border-color: var(--blackberry); animation: moveRight 25s linear infinite; }
+        .square:nth-child(2) { top: 25%; border-color: var(--burnt-tangerine); animation: moveLeft 18s linear infinite; }
+        .square:nth-child(3) { top: 40%; border-color: var(--blue-bell); animation: moveRight 30s linear infinite; }
+        .square:nth-child(4) { top: 60%; border-color: var(--tea-green); animation: moveLeft 22s linear infinite; }
+        .square:nth-child(5) { top: 80%; border-color: var(--banana-cream); animation: moveRight 20s linear infinite; }
+        .square:nth-child(6) { top: 15%; border-color: var(--blue-bell); animation: moveLeft 35s linear infinite; delay: -5s; }
+        .square:nth-child(7) { top: 70%; border-color: var(--blackberry); animation: moveRight 28s linear infinite; delay: -10s; }
+
+        /* --- Layout & Sections --- */
+        .section {
+            padding: 8rem 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1100px !important;
+            width: 100%;
+        }
+
+        .section-heading { 
+            color: var(--white); 
+            font-weight: 800; 
+            letter-spacing: -0.05em; 
+            margin-bottom: 3rem !important;
+            line-height: 1.1;
+        }
+
+        .hero { 
+            min-height: 100vh;
+            background: transparent;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero .title { 
+            color: var(--white); 
+            font-weight: 900; 
+            font-size: 4rem;
+        }
+
+        .hero .subtitle { 
+            color: var(--text-dim);
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin: 1.5rem auto 0 !important;
+        }
+
+        .button.is-primary { 
+            background: var(--burnt-tangerine); 
+            border: none; 
+            font-weight: 700; 
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(224, 54, 22, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem 3rem;
+        }
+
+        .button.is-primary:hover { 
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(224, 54, 22, 0.5);
+            background: var(--burnt-tangerine);
+        }
+
+        .tag.is-danger.is-light {
+            background-color: rgba(224, 54, 22, 0.1);
+            color: var(--burnt-tangerine);
+            border: 1px solid rgba(224, 54, 22, 0.2);
+            font-weight: 600;
+        }
+
+        /* --- Cards --- */
+        .columns.is-multiline {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .column.fixed-column {
+            display: flex;
+        }
+
+        .box.is-standard { 
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 3rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            backdrop-filter: blur(10px);
+        }
+
+        .box.is-standard:hover { 
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-8px); 
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-icon { 
+            font-size: 3rem; 
+            margin-bottom: 2rem;
+            color: var(--blue-bell);
+        }
+
+        footer { 
+            background-color: var(--black); 
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-dim); 
+            padding: 6rem 1.5rem; 
+        }
+
+        footer a { color: var(--text-dim); transition: color 0.2s; }
+        footer a:hover { color: var(--banana-cream); }
+
+        .image-box {
+            background: linear-gradient(135deg, rgba(88, 53, 94, 0.2) 0%, rgba(0,0,0,0.5) 100%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--black); }
+        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #333; }
+    </style>
+</head>
+<body>
+    <div id="bg-canvas"></div>
+
+    <section class="hero">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <div class="tag is-danger is-light is-rounded mb-5">Version 1.0 — Now Available</div>
+                <h1 class="title">
+                    Email, integrated with the <br><span class="has-text-danger">entire web.</span>
+                </h1>
+                <h2 class="subtitle">
+                    Composite emails instantly using our premium Ghost-Injection modal or the Chrome Side Panel. Built for those who hate context switching.
+                </h2>
+                <div class="mt-6">
+                    <a href="https://github.com" class="button is-primary is-large is-rounded px-6">Add to Chrome — It's Free</a>
+                    <p class="is-size-7 mt-4" style="color: var(--text-dim); opacity: 0.7;">Join 10k+ professionals using MailLayer.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="problem" class="section">
+        <div class="container">
+            <div class="columns is-vcentered is-variable is-8">
+                <div class="column is-6">
+                    <h2 class="title is-2 section-heading">The "Mailto" Link is Broken.</h2>
+                    <p class="is-size-4 mb-6" style="color: var(--text-dim)">
+                        Clicking an email link shouldn't force you out of your current tab. Desktop clients are slow, and webmail popups are messy.
+                    </p>
+                    <div class="box is-standard p-6">
+                        <ul class="checklist">
+                            <li class="mb-4 is-size-5"><span class="icon mr-3" style="color: var(--burnt-tangerine)"><i class="fas fa-times-circle"></i></span> No more disruptive browser redirects</li>
+                            <li class="mb-4 is-size-5"><span class="icon mr-3" style="color: var(--burnt-tangerine)"><i class="fas fa-times-circle"></i></span> No more losing your place on the page</li>
+                            <li class="is-size-5"><span class="icon mr-3" style="color: var(--burnt-tangerine)"><i class="fas fa-times-circle"></i></span> No more clunky desktop app launches</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="column is-6">
+                    <div class="image-box">
+                        <div class="has-text-centered">
+                            <div class="feature-icon" style="font-size: 5rem;"><i class="fas fa-envelope-open-text"></i></div>
+                            <p class="is-size-3 has-text-weight-bold" style="color: var(--white); font-weight: 800;">MailLayer Focus</p>
+                            <p class="mt-4" style="color: var(--blue-bell); font-weight: 600;">Stay inside your current workflow.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="section is-light">
+        <div class="container">
+            <h2 class="title is-2 section-heading has-text-centered">Built for Professionals</h2>
+            <div class="columns is-multiline is-variable is-6">
+                <div class="column is-4 fixed-column">
+                    <div class="box is-standard">
+                        <div class="feature-icon"><i class="fas fa-ghost"></i></div>
+                        <h3 class="title is-4" style="color: var(--white)">Ghost Injection</h3>
+                        <p style="color: var(--text-dim)">Works on highly secure sites like Gemini and ChatGPT by bypassing CSP and Trusted Types.</p>
+                    </div>
+                </div>
+                <div class="column is-4 fixed-column">
+                    <div class="box is-standard">
+                        <div class="feature-icon"><i class="fas fa-columns"></i></div>
+                        <h3 class="title is-4" style="color: var(--white)">Side Panel View</h3>
+                        <p style="color: var(--text-dim)">Load Gmail, Outlook, or Yahoo Web directly in your Chrome Side Panel for zero-context switching.</p>
+                    </div>
+                </div>
+                <div class="column is-4 fixed-column">
+                    <div class="box is-standard">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3 class="title is-4" style="color: var(--white)">Isolated & Secure</h3>
+                        <p style="color: var(--text-dim)">Shadow-DOM encapsulation ensures your experience is never broken by the host site's CSS or scripts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cta" class="section">
+        <div class="container has-text-centered">
+            <h2 class="title is-2 section-heading">Ready to Upgrade Your Web Experience?</h2>
+            <p class="is-size-5 mb-6">Join thousands of users who make the web feel like home.</p>
+            <a href="#" class="button is-primary is-large is-rounded px-6">Download MailLayer Now</a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-4">
+                    <h3 class="title is-4 has-text-white">MailLayer</h3>
+                    <p>Making email an integrated part of the web.</p>
+                </div>
+                <div class="column is-8 has-text-right">
+                    <div class="links">
+                        <a href="#features" class="mx-3">Features</a>
+                        <a href="https://github.com" class="mx-3">Open Source</a>
+                        <a href="#" class="mx-3">Privacy</a>
+                    </div>
+                </div>
+            </div>
+            <hr style="background-color: #374151;">
+            <div class="content has-text-centered">
+                <p>&copy; 2026 MailLayer. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const colors = ['#58355e', '#e03616', '#fff689', '#cfffb0', '#5998c5'];
+        
+        // Spawn background field
+        for(let i=0; i<150; i++) {
+            const sq = document.createElement('div');
+            sq.className = 'bg-square';
+            sq.style.left = Math.random() * 100 + '%';
+            sq.style.top = Math.random() * 100 + '%';
+            sq.style.animation = `flicker ${2 + Math.random() * 3}s infinite ${Math.random() * 2}s`;
+            canvas.appendChild(sq);
+        }
+
+        // Spawn shooting squares
+        function spawnShootingSquare() {
+            const sq = document.createElement('div');
+            sq.className = 'shooting-square';
+            sq.style.left = (Math.random() * 100 + 50) + '%';
+            sq.style.top = (Math.random() * 50 - 20) + '%';
+            sq.style.color = colors[Math.floor(Math.random() * colors.length)];
+            sq.style.borderColor = 'currentColor';
+            sq.style.animation = `shoot ${3 + Math.random() * 3}s linear forwards`;
+            
+            canvas.appendChild(sq);
+            setTimeout(() => sq.remove(), 6000);
+        }
+
+        setInterval(spawnShootingSquare, 1500);
+        for(let i=0; i<3; i++) setTimeout(spawnShootingSquare, i * 500);
+    </script>
+</body>
+</html>
