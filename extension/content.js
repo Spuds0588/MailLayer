@@ -91,10 +91,7 @@ function openModal(data) {
       <div class="maillayer-modal-container">
         <div class="maillayer-header" id="maillayer-drag-handle">
           <div style="display:flex; align-items:center;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff" style="margin-right:10px;">
-              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-            </svg>
-            <h2 style="margin:0; font-size:16px; color: white;">MailLayer Compose</h2>
+            <img src="${chrome.runtime.getURL('Icons/icon32.png')}" width="20" height="20" style="margin-right:10px;" alt="Logo">
           </div>
           <button class="maillayer-close-btn" aria-label="Close">&times;</button>
         </div>

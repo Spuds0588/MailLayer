@@ -44,11 +44,12 @@
             margin-bottom: 1.5rem;
         }
 
-        .logo-svg {
-            width: 64px;
-            height: 64px;
-            fill: var(--burnt-tangerine);
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
         }
+
 
         .title { color: var(--white) !important; font-weight: 800; letter-spacing: -0.05em; text-align: center; }
         .subtitle { color: #9ca3af !important; text-align: center; margin-bottom: 2.5rem !important; }
@@ -135,10 +136,9 @@
 <body>
     <div class="options-card">
         <div class="logo-mark">
-            <svg class="logo-svg" viewBox="0 0 24 24">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-            </svg>
+            <img src="Icons/icon128.png" class="logo-img" alt="MailLayer Logo">
         </div>
+
         <h1 class="title is-3">MailLayer Setup</h1>
         <p class="subtitle is-6">Configure your integrated email experience.</p>
 
@@ -243,8 +243,8 @@
         <div id="status" class="status">Settings saved successfully!</div>
 
         <div class="brand-hint">
-            Premium Productivity
         </div>
+
     </div>
 
     <script src="vendor/quill/quill.min.js"></script>
