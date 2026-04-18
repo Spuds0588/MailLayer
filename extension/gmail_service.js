@@ -21,7 +21,7 @@ class GmailService {
 
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData.error.message || 'Failed to send email');
+        throw new Error(errData.error?.message || 'Failed to send Gmail email (API Error)');
       }
 
       return await response.json();
@@ -45,17 +45,18 @@ class GmailService {
 
   /**
    * Encodes message into the "Raw" format required by Gmail API.
-   * Supports HTML (Multipart/Alternative).
+   * Supports HTML (Multipart/Alternative) and Attachments (Multipart/Mixed).
    */
   static createRawMessage(data) {
-    const boundary = '----MailLayerBoundary' + Math.random().toString(16).slice(2);
+    const mainBoundary = '----MailLayerMainBoundary' + Math.random().toString(16).slice(2);
+    const bodyBoundary = '----MailLayerBodyBoundary' + Math.random().toString(16).slice(2);
     
     // Create MIME headers
-    const headers = [
+    let headers = [
       `To: ${data.to}`,
       `Subject: ${data.subject}`,
       'MIME-Version: 1.0',
-      `Content-Type: multipart/alternative; boundary="${boundary}"`
+      `Content-Type: multipart/mixed; boundary="${mainBoundary}"`
     ];
 
     if (data.cc) headers.push(`Cc: ${data.cc}`);
@@ -64,33 +65,48 @@ class GmailService {
     // Plain text fallback (strip HTML)
     const plainText = data.body.replace(/<[^>]*>/g, '');
 
-    const email = [
+    let emailParts = [
       ...headers,
       '',
-      `--${boundary}`,
+      `--${mainBoundary}`,
+      `Content-Type: multipart/alternative; boundary="${bodyBoundary}"`,
+      '',
+      `--${bodyBoundary}`,
       'Content-Type: text/plain; charset=utf-8',
       'Content-Transfer-Encoding: 7bit',
       '',
       plainText,
       '',
-      `--${boundary}`,
+      `--${bodyBoundary}`,
       'Content-Type: text/html; charset=utf-8',
       'Content-Transfer-Encoding: 7bit',
       '',
       data.body,
       '',
-      `--${boundary}--`
-    ].join('\r\n');
+      `--${bodyBoundary}--`
+    ];
 
-    // Robust Base64url safe encoding (TextEncoder handles UTF-8 correctly)
-    const bytes = new TextEncoder().encode(email);
-    let binary = '';
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
+    // Add Attachments
+    if (data.attachments && data.attachments.length > 0) {
+      data.attachments.forEach(att => {
+        emailParts.push(`--${mainBoundary}`);
+        emailParts.push(`Content-Type: ${att.contentType}; name="${att.name}"`);
+        emailParts.push(`Content-Disposition: attachment; filename="${att.name}"`);
+        emailParts.push('Content-Transfer-Encoding: base64');
+        emailParts.push('');
+        emailParts.push(att.content);
+      });
     }
-    
-    return btoa(binary)
+
+    emailParts.push(`--${mainBoundary}--`);
+
+    const email = emailParts.join('\r\n');
+
+    // Robust Base64url safe encoding
+    const bytes = new TextEncoder().encode(email);
+    // Efficient Base64url safe encoding
+    const base64 = btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(''));
+    return base64
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');

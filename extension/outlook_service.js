@@ -4,7 +4,7 @@
  */
 class OutlookService {
   static CLIENT_ID = (typeof MailLayerConfig !== 'undefined') ? MailLayerConfig.OUTLOOK_CLIENT_ID : '';
-  static SCOPES = ['https://graph.microsoft.com/mail.send', 'https://graph.microsoft.com/user.read'];
+  static SCOPES = ['https://graph.microsoft.com/mail.send'];
 
   static async sendEmail(data) {
     try {
@@ -23,8 +23,14 @@ class OutlookService {
           toRecipients: [
             { emailAddress: { address: data.to } }
           ],
-          ccRecipients: data.cc ? [{ emailAddress: { address: data.cc } }] : [],
-          bccRecipients: data.bcc ? [{ emailAddress: { address: data.bcc } }] : []
+          ccRecipients: data.cc ? data.cc.split(',').map(e => ({ emailAddress: { address: e.trim() } })) : [],
+          bccRecipients: data.bcc ? data.bcc.split(',').map(e => ({ emailAddress: { address: e.trim() } })) : [],
+          attachments: (data.attachments || []).map(att => ({
+            '@odata.type': '#microsoft.graph.fileAttachment',
+            name: att.name,
+            contentType: att.contentType,
+            contentBytes: att.content
+          }))
         }
       };
 
@@ -34,7 +40,10 @@ class OutlookService {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(emailContent)
+        body: JSON.stringify({
+          ...emailContent,
+          saveToSentItems: true
+        })
       });
 
       if (!response.ok) {
@@ -52,15 +61,12 @@ class OutlookService {
   static getAccessToken() {
     return new Promise((resolve, reject) => {
       const redirectUri = chrome.identity.getRedirectURL();
-      const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      // Use a simpler auth URL without nonce if possible, or ensure it's handled
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
         `client_id=${this.CLIENT_ID}&` +
         `response_type=token&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=${encodeURIComponent(this.SCOPES)}&` +
-        `response_mode=fragment&` +
-        `state=maillayer&` +
-        `nonce=${nonce}`;
+        `scope=${encodeURIComponent(this.SCOPES.join(' '))}`;
 
       console.log('[MailLayer OutlookService] Launching Auth Flow...', authUrl);
 
@@ -73,13 +79,19 @@ class OutlookService {
           return reject(new Error('No response URL from Microsoft'));
         }
 
-        const url = new URL(responseUrl.replace('#', '?'));
-        const token = url.searchParams.get('access_token');
+        // More robust token extraction from fragment
+        const fragment = responseUrl.split('#')[1];
+        if (!fragment) return reject(new Error('No fragment in response URL'));
+
+        const params = new URLSearchParams(fragment);
+        const token = params.get('access_token');
         
         if (token) {
+          console.log('[MailLayer OutlookService] Token acquired successfully.');
           resolve(token);
         } else {
-          reject(new Error('Access token not found in response'));
+          const error = params.get('error_description') || params.get('error') || 'Access token not found';
+          reject(new Error(error));
         }
       });
     });

@@ -5,7 +5,7 @@ importScripts('outlook_service.js');
 
 const DEFAULT_SETTINGS = {
   preferredEditor: 'modal', // 'sidebar' or 'modal'
-  preferredProvider: 'gmail_web' // 'gmail_web', 'outlook_web', 'yahoo'
+  preferredProvider: 'gmail_web' // 'gmail_web', 'outlook_web'
 };
 
 let settings = DEFAULT_SETTINGS;
@@ -41,85 +41,124 @@ chrome.storage.local.get(['settings'], (result) => {
   if (result.settings) settings = result.settings;
 });
 
-// Listener for interception messages from content script
+// Standardized response helper
+function sendStandardResponse(sendResponse, success, data = null, error = null) {
+  try {
+    sendResponse({
+      success: success,
+      action: success ? 'send_success' : 'send_error', // Legacy support for action checks
+      data: data,
+      error: error
+    });
+  } catch (e) {
+    console.warn('[MailLayer Background] Could not send response (channel likely closed):', e);
+  }
+}
+
+// Main message router
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'intercept_mailto') {
-    console.log('[MailLayer Background] Intercepted mailto:', message.data);
-    
-    // Save current draft data
-    chrome.storage.local.set({ currentDraft: message.data });
+  console.log('[MailLayer Background] onMessage:', message);
 
-    // API SENDING OR SIDEBAR FALLBACK
-    if (message.data.sendDirectly) {
-      console.log(`[MailLayer Background] Attempting direct API send via ${settings.preferredProvider}...`);
+  handleMessage(message, sender)
+    .then(result => {
+      console.log('[MailLayer Background] handleMessage success:', result);
+      sendStandardResponse(sendResponse, true, result);
       
-      const senderService = settings.preferredProvider === 'outlook_web' ? OutlookService : GmailService;
-      
-      senderService.sendEmail(message.data)
-        .then(() => {
-          const response = { action: 'send_success' };
-          sendResponse(response);
-          // Also broadcast to tabs if it originated from elsewhere
-          if (sender.tab) chrome.tabs.sendMessage(sender.tab.id, response);
-          chrome.runtime.sendMessage(response); 
-        })
-        .catch(err => {
-          const response = { action: 'send_error', error: err.message };
-          sendResponse(response);
-          if (sender.tab) chrome.tabs.sendMessage(sender.tab.id, response);
-          chrome.runtime.sendMessage(response);
-        });
-      return true; // Keep channel open
-    }
-
-    // MANUAL FALLBACK OR DEFAULT SIDEBAR
-    if (message.data.openSidebar || settings.preferredEditor === 'sidebar') {
-      console.log('[MailLayer Background] Opening Sidebar (Manual or Setting)');
-      chrome.sidePanel.open({ tabId: sender.tab.id });
-      sendResponse({ action: 'sidebar_opening' });
-    } else {
-      console.log('[MailLayer Background] Attempting Modal injection...');
-      
-      let modalConfirmed = false;
-      const confirmationListener = (confirmMsg, confirmSender) => {
-        if (confirmMsg.action === 'modal_ready' && confirmSender.tab && confirmSender.tab.id === sender.tab.id) {
-          modalConfirmed = true;
-          chrome.runtime.onMessage.removeListener(confirmationListener);
+      // If it was a send action, also broadcast success to other parts of the extension
+      if (message.data?.sendDirectly || message.action === 'send_email') {
+        const successMsg = { action: 'send_success', success: true };
+        console.log('[MailLayer Background] Broadcasting success...');
+        
+        // Tab broadcast
+        if (sender.tab) {
+          chrome.tabs.sendMessage(sender.tab.id, successMsg, () => {
+            if (chrome.runtime.lastError) { /* Ignore - tab may have closed */ }
+          });
         }
-      };
-      chrome.runtime.onMessage.addListener(confirmationListener);
-
-      // Trigger modal
-      chrome.tabs.sendMessage(sender.tab.id, { action: 'open_modal', data: message.data });
-
-      // Fallback Timeout
-      setTimeout(() => {
-        if (!modalConfirmed) {
-          console.warn('[MailLayer Background] Modal injection failed. Signaling content script.');
-          chrome.tabs.sendMessage(sender.tab.id, { action: 'modal_failed' });
-          chrome.runtime.onMessage.removeListener(confirmationListener);
-        }
-      }, 750);
-
-      sendResponse({ action: 'modal_opening' });
-    }
-    return true; // Keep channel open
-  }
-
-  // OUTLOOK AUTH TRIGGER
-  if (message.action === 'trigger_outlook_auth') {
-    OutlookService.getAccessToken()
-      .then(token => {
-        chrome.storage.local.set({ outlook_token: token }, () => {
-          sendResponse({ success: true });
+        
+        // Internal extension broadcast
+        chrome.runtime.sendMessage(successMsg, () => {
+          if (chrome.runtime.lastError) {
+            // Ignore - this happens if no other extension pages (options/sidebar) are open
+          }
         });
-      })
-      .catch(err => {
-        sendResponse({ success: false, error: err.message });
-      });
-    return true; // Keep channel open for async response
-  }
+      }
+
+    })
+    .catch(err => {
+      console.error('[MailLayer Background] handleMessage error:', err);
+      sendStandardResponse(sendResponse, false, null, err.message || err.toString());
+    });
+
+
+  return true; // Keep channel open for async response
 });
+
+/**
+ * Core logic for handling messages.
+ * Returns a promise that resolves with the data to be sent back.
+ */
+async function handleMessage(message, sender) {
+  const res = await chrome.storage.local.get(['settings']);
+  const currentSettings = res.settings || DEFAULT_SETTINGS;
+
+  // 1. Direct Send Request (Prioritize this even if action is intercept_mailto)
+  if (message.data?.sendDirectly || message.action === 'send_email') {
+    const data = message.data || message;
+    const provider = currentSettings.preferredProvider;
+    const senderService = provider === 'outlook_web' ? OutlookService : GmailService;
+    
+    console.log(`[MailLayer Background] Starting ${provider} send process...`);
+    try {
+      const sendResult = await senderService.sendEmail(data);
+      console.log(`[MailLayer Background] ${provider} send result:`, sendResult);
+      return { status: 'sent', provider, details: sendResult };
+    } catch (sendErr) {
+      console.error(`[MailLayer Background] ${provider} send operation failed:`, sendErr);
+      throw sendErr;
+    }
+  }
+
+
+  // 2. Intercept Mailto (Initial trigger from page)
+  if (message.action === 'intercept_mailto') {
+    const data = message.data;
+    
+    if (currentSettings.signature && data.body !== undefined) {
+      const sigMarker = 'class="ml-signature-block"';
+      if (!data.body.includes(sigMarker)) {
+        const signatureHtml = `<br><br><div class="ml-signature-block" contenteditable="false" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-top: 20px;">${currentSettings.signature}</div>`;
+        data.body = (data.body || '') + signatureHtml;
+      }
+    }
+    
+    await chrome.storage.local.set({ currentDraft: data });
+
+    if (data.openSidebar || currentSettings.preferredEditor === 'sidebar') {
+      chrome.sidePanel.open({ tabId: sender.tab.id });
+      return { action: 'sidebar_opening' };
+    } else {
+      chrome.tabs.sendMessage(sender.tab.id, { action: 'open_modal', data: data });
+      return { action: 'modal_opening' };
+    }
+  }
+
+
+  // 3. Outlook Auth Trigger
+  if (message.action === 'trigger_outlook_auth') {
+    const token = await OutlookService.getAccessToken();
+    await chrome.storage.local.set({ outlook_token: token });
+    return { authenticated: true };
+  }
+
+  // 4. Modal Ready Notification
+  if (message.action === 'modal_ready') {
+    return { acknowledged: true };
+  }
+
+  return { status: 'ignored' };
+}
+
 
 /**
  * Setup declarativeNetRequest rules to strip frame blockers for external webmail.

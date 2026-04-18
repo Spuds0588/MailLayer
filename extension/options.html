@@ -111,7 +111,26 @@
             text-align: center;
             margin-top: 2rem;
         }
+        .ql-toolbar.ql-snow {
+            border: none !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background: #1a1a1a !important;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        .ql-container.ql-snow {
+            border: none !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-radius: 0 0 12px 12px !important;
+        }
+        .ql-editor {
+            color: white !important;
+            min-height: 120px;
+        }
+        .ql-snow .ql-stroke { stroke: #eee !important; }
+        .ql-snow .ql-fill { fill: #eee !important; }
+        .ql-snow .ql-picker { color: #eee !important; }
     </style>
+    <link rel="stylesheet" href="vendor/quill/quill.snow.css">
 </head>
 <body>
     <div class="options-card">
@@ -161,7 +180,6 @@
             <div class="button-group" data-id="preferredProvider">
                 <button class="btn-option is-active" data-value="gmail_web">Gmail</button>
                 <button class="btn-option" data-value="outlook_web">Outlook</button>
-                <button class="btn-option" data-value="yahoo">Yahoo</button>
             </div>
             <p class="help has-text-grey-light">Primary webmail service for MailLayer.</p>
         </div>
@@ -192,6 +210,12 @@
             </div>
         </div>
 
+        <div class="field mb-6">
+            <label class="field-label" style="color: var(--burnt-tangerine)">Email Signature (Rich Text)</label>
+            <div id="signature-editor" style="min-height: 150px;"></div>
+            <p class="help has-text-grey-light">Appended to all outgoing messages.</p>
+        </div>
+
         <style>
             .status {
                 position: fixed;
@@ -219,10 +243,11 @@
         <div id="status" class="status">Settings saved successfully!</div>
 
         <div class="brand-hint">
-            Part of the Antigravity Suite • Premium Productivity
+            Premium Productivity
         </div>
     </div>
 
+    <script src="vendor/quill/quill.min.js"></script>
     <script src="options.js"></script>
 </body>
 </html>

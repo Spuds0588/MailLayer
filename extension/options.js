@@ -1,9 +1,5 @@
-/**
- * MailLayer Options Logic
- * Auto-saves settings on selection change and manages OAuth status.
- */
-
-const statusEl = document.getElementById('status');
+// Global State
+let signatureQuill;
 
 /**
  * Save settings to chrome.storage.local
@@ -14,11 +10,12 @@ const saveOptions = () => {
     
     if (!activeEditor || !activeProvider) return;
 
+    const signature = signatureQuill ? signatureQuill.root.innerHTML : '';
     const preferredEditor = activeEditor.dataset.value;
     const preferredProvider = activeProvider.dataset.value;
 
     chrome.storage.local.set(
-        { settings: { preferredEditor, preferredProvider } },
+        { settings: { preferredEditor, preferredProvider, signature } },
         () => {
             statusEl.classList.add('visible');
             setTimeout(() => {
@@ -36,7 +33,31 @@ const restoreOptions = () => {
         if (result.settings) {
             setGroupActive('preferredEditor', result.settings.preferredEditor || 'modal');
             setGroupActive('preferredProvider', result.settings.preferredProvider || 'gmail_web');
+            if (signatureQuill && result.settings.signature) {
+                signatureQuill.clipboard.dangerouslyPasteHTML(result.settings.signature);
+            }
         }
+    });
+};
+
+/**
+ * Initialize Quill for Signature
+ */
+const initSignatureEditor = () => {
+    signatureQuill = new Quill('#signature-editor', {
+        theme: 'snow',
+        placeholder: 'Enter your rich text signature...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                ['link', 'clean']
+            ]
+        }
+    });
+
+    // Auto-save signature on blur
+    signatureQuill.on('selection-change', (range) => {
+        if (!range) saveOptions();
     });
 };
 
@@ -124,8 +145,11 @@ const handleOutlookAuth = () => {
     });
 };
 
+const statusEl = document.getElementById('status');
+
 // Start
 document.addEventListener('DOMContentLoaded', () => {
+    initSignatureEditor();
     initButtonGroups();
     restoreOptions();
     updateAuthStatus();

@@ -59,10 +59,12 @@ function parseMailtoUrl(url) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'open_modal') {
     openModal(message.data);
+    sendResponse({ status: 'modal_opening' });
   } else if (message.action === 'modal_failed') {
     showFallbackTrigger();
+    sendResponse({ status: 'fallback_shown' });
   }
-  return true;
+  // Removed return true to avoid "channel closed" errors when no response is sent
 });
 
 /**
@@ -97,28 +99,53 @@ function openModal(data) {
           <button class="maillayer-close-btn" aria-label="Close">&times;</button>
         </div>
         <div class="maillayer-body">
-            <div class="maillayer-field">
-                <label>Recipient</label>
-                <input type="text" id="ml-to" value="${escapeHTML(data.to)}">
+            <div class="maillayer-row">
+                <div class="maillayer-label-cell">To</div>
+                <div class="maillayer-input-cell">
+                    <input type="text" id="ml-to" value="${escapeHTML(data.to)}">
+                    <div class="maillayer-field-toggles">
+                        <span id="ml-toggle-cc">CC</span>
+                        <span id="ml-toggle-bcc">BCC</span>
+                    </div>
+                </div>
             </div>
-            <div class="maillayer-field">
-                <label>CC</label>
-                <input type="text" id="ml-cc" value="${escapeHTML(data.cc || '')}">
+            
+            <div class="maillayer-row" id="ml-cc-row" style="${data.cc ? '' : 'display:none;'}">
+                <div class="maillayer-label-cell">CC</div>
+                <div class="maillayer-input-cell">
+                    <input type="text" id="ml-cc" value="${escapeHTML(data.cc || '')}">
+                </div>
             </div>
-            <div class="maillayer-field">
-                <label>BCC</label>
-                <input type="text" id="ml-bcc" value="${escapeHTML(data.bcc || '')}">
+
+            <div class="maillayer-row" id="ml-bcc-row" style="${data.bcc ? '' : 'display:none;'}">
+                <div class="maillayer-label-cell">BCC</div>
+                <div class="maillayer-input-cell">
+                    <input type="text" id="ml-bcc" value="${escapeHTML(data.bcc || '')}">
+                </div>
             </div>
-            <div class="maillayer-field">
-                <label>Subject</label>
-                <input type="text" id="ml-subject" value="${escapeHTML(data.subject)}">
+
+            <div class="maillayer-row">
+                <div class="maillayer-label-cell">Subject</div>
+                <div class="maillayer-input-cell">
+                    <input type="text" id="ml-subject" value="${escapeHTML(data.subject)}">
+                </div>
             </div>
-            <div class="maillayer-field">
-                <label>Message</label>
+
+            <div class="maillayer-editor-row">
                 <div id="ml-editor-container" style="min-height: 250px;"></div>
             </div>
+            <div id="ml-attachments-list" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
         </div>
         <div class="maillayer-footer">
+            <div style="display:flex; gap: 8px; align-items:center;">
+                <button class="maillayer-btn-icon" id="ml-attach-btn" title="Attach Files">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#eee">
+                        <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-2.48-2.02-4.5-4.5-4.5S7 2.52 7 5v12.5c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5V6h-1.5z"/>
+                    </svg>
+                </button>
+                <input type="file" id="ml-file-input" multiple style="display:none;">
+            </div>
+            <div style="flex:1"></div>
             <button class="maillayer-btn maillayer-btn-secondary close-action">Discard</button>
             <button class="maillayer-btn maillayer-btn-primary">Send Email</button>
         </div>
@@ -147,25 +174,89 @@ function openModal(data) {
   container.querySelector('.maillayer-close-btn').onclick = closeModal;
   container.querySelector('.close-action').onclick = closeModal;
 
+  // CC/BCC Toggles
+  const toggleCC = container.querySelector('#ml-toggle-cc');
+  const toggleBCC = container.querySelector('#ml-toggle-bcc');
+  const ccRow = container.querySelector('#ml-cc-row');
+  const bccRow = container.querySelector('#ml-bcc-row');
+
+  toggleCC.onclick = () => {
+    ccRow.style.display = ccRow.style.display === 'none' ? 'flex' : 'none';
+  };
+  toggleBCC.onclick = () => {
+    bccRow.style.display = bccRow.style.display === 'none' ? 'flex' : 'none';
+  };
+
   // Initialize Quill
   const quill = new Quill(container.querySelector('#ml-editor-container'), {
     theme: 'snow',
-    placeholder: 'Write your message...',
+    placeholder: 'Type your message...',
     modules: {
       toolbar: [
-        ['bold', 'italic', 'underline'],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         ['link', 'clean']
       ]
     }
   });
-  
-  // Set initial content if any
+
   if (data.body) {
     quill.clipboard.dangerouslyPasteHTML(data.body);
   }
 
   container._mlQuill = quill;
+  container._mlAttachments = [];
+
+  // Attachment Logic
+  const attachBtn = container.querySelector('#ml-attach-btn');
+  const fileInput = container.querySelector('#ml-file-input');
+  const attachList = container.querySelector('#ml-attachments-list');
+
+  attachBtn.onclick = () => fileInput.click();
+
+  fileInput.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    for (const file of files) {
+      if (container._mlAttachments.length >= 10) {
+        alert('Max 10 attachments allowed.');
+        break;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Data = event.target.result.split(',')[1];
+        const attachment = {
+          name: file.name,
+          contentType: file.type || 'application/octet-stream',
+          content: base64Data,
+          size: file.size
+        };
+        
+        container._mlAttachments.push(attachment);
+        renderAttachments();
+      };
+      reader.readAsDataURL(file);
+    }
+    fileInput.value = ''; // Reset for same file selection
+  };
+
+  const renderAttachments = () => {
+    attachList.innerHTML = '';
+    container._mlAttachments.forEach((att, index) => {
+      const chip = document.createElement('div');
+      chip.className = 'ml-attachment-chip';
+      chip.innerHTML = `
+        <span>${att.name} (${(att.size/1024).toFixed(1)} KB)</span>
+        <span class="ml-attachment-remove" data-index="${index}">&times;</span>
+      `;
+      chip.querySelector('.ml-attachment-remove').onclick = () => {
+        container._mlAttachments.splice(index, 1);
+        renderAttachments();
+      };
+      attachList.appendChild(chip);
+    });
+  };
 
   // Drag Logic
   const handle = container.querySelector('#maillayer-drag-handle');
@@ -201,7 +292,8 @@ function openModal(data) {
         cc: container.querySelector('#ml-cc')?.value || '',
         bcc: container.querySelector('#ml-bcc')?.value || '',
         subject: container.querySelector('#ml-subject').value,
-        body: htmlBody,
+        body: quill.root.innerHTML,
+        attachments: container._mlAttachments,
         sendDirectly: true
     };
 
@@ -219,7 +311,7 @@ function openModal(data) {
                 return;
             }
 
-            if (response && response.action === 'send_success') {
+            if (response && response.success) {
                 console.log('[MailLayer] Send successful reported by background.');
                 sendBtn.innerText = '✅ Sent!';
                 setTimeout(closeModal, 1000);

@@ -174,6 +174,14 @@
             text-align: center;
             color: #9ca3af;
         }
+
+        .ml-signature-block {
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            padding-top: 15px !important;
+            margin-top: 25px !important;
+            color: #9ca3af !important;
+            font-size: 0.9em !important;
+        }
     </style>
 </head>
 <body>
@@ -209,7 +217,15 @@
         <div id="editor-container"></div>
     </div>
 
+    <div id="ml-attachments-list" style="margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 8px;"></div>
+
     <div class="actions">
+        <button class="discard-btn" id="ml-attach-btn" title="Attach Files">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-2.48-2.02-4.5-4.5-4.5S7 2.52 7 5v12.5c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5V6h-1.5z"/>
+            </svg>
+        </button>
+        <input type="file" id="ml-file-input" multiple style="display:none;">
         <button class="discard-btn" id="discard-btn">Discard</button>
         <button class="send-btn" id="send-btn">Send</button>
     </div>
