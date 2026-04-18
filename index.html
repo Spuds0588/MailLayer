@@ -34,8 +34,8 @@
             position: relative;
         }
 
-        /* --- Background Animation: Shooting Squares --- */
-        .bg-animation {
+        /* --- Background Animation: Meteor Envelopes --- */
+        #bg-canvas {
             position: fixed;
             top: 0;
             left: 0;
@@ -44,38 +44,48 @@
             z-index: -1;
             overflow: hidden;
             pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(10,10,15,0.8) 100%);
         }
 
-        .square {
+        .bg-gradient-overlay {
             position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            width: 40px;
-            height: 40px;
-            box-sizing: border-box;
-            background: transparent;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(224, 54, 22, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 100% 100%, rgba(88, 53, 94, 0.15) 0%, transparent 50%);
         }
 
-        @keyframes moveLeft {
-            0% { transform: translateX(120vw) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateX(-20vw) rotate(360deg); opacity: 0; }
+        @keyframes meteor-fall {
+            0% {
+                transform: rotate(215deg) translateX(0);
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: rotate(215deg) translateX(-100vmax);
+                opacity: 0;
+            }
         }
 
-        @keyframes moveRight {
-            0% { transform: translateX(-20vw) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.5; }
-            90% { opacity: 0.5; }
-            100% { transform: translateX(120vw) rotate(360deg); opacity: 0; }
+        .meteor-envelope {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+            /* The animation is dynamically applied in JS */
         }
 
-        .square:nth-child(1) { top: 10%; border-color: var(--blackberry); animation: moveRight 25s linear infinite; }
-        .square:nth-child(2) { top: 25%; border-color: var(--burnt-tangerine); animation: moveLeft 18s linear infinite; }
-        .square:nth-child(3) { top: 40%; border-color: var(--blue-bell); animation: moveRight 30s linear infinite; }
-        .square:nth-child(4) { top: 60%; border-color: var(--tea-green); animation: moveLeft 22s linear infinite; }
-        .square:nth-child(5) { top: 80%; border-color: var(--banana-cream); animation: moveRight 20s linear infinite; }
-        .square:nth-child(6) { top: 15%; border-color: var(--blue-bell); animation: moveLeft 35s linear infinite; delay: -5s; }
-        .square:nth-child(7) { top: 70%; border-color: var(--blackberry); animation: moveRight 28s linear infinite; delay: -10s; }
+        .meteor-tail {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 100%;
+            width: 80px;
+            height: 1px;
+            background: linear-gradient(to right, rgba(224, 54, 22, 0.8), transparent);
+        }
+
 
         /* --- Layout & Sections --- */
         .section {
@@ -204,7 +214,11 @@
     </style>
 </head>
 <body>
-    <div id="bg-canvas"></div>
+    <div id="bg-canvas">
+        <div class="bg-gradient-overlay"></div>
+        <!-- Meteors will be injected here -->
+    </div>
+
 
     <section class="hero">
         <div class="hero-body">
@@ -313,34 +327,28 @@
     </footer>
     <script>
         const canvas = document.getElementById('bg-canvas');
-        const colors = ['#58355e', '#e03616', '#fff689', '#cfffb0', '#5998c5'];
+        const count = 30; // Number of meteors
         
-        // Spawn background field
-        for(let i=0; i<150; i++) {
-            const sq = document.createElement('div');
-            sq.className = 'bg-square';
-            sq.style.left = Math.random() * 100 + '%';
-            sq.style.top = Math.random() * 100 + '%';
-            sq.style.animation = `flicker ${2 + Math.random() * 3}s infinite ${Math.random() * 2}s`;
-            canvas.appendChild(sq);
-        }
-
-        // Spawn shooting squares
-        function spawnShootingSquare() {
-            const sq = document.createElement('div');
-            sq.className = 'shooting-square';
-            sq.style.left = (Math.random() * 100 + 50) + '%';
-            sq.style.top = (Math.random() * 50 - 20) + '%';
-            sq.style.color = colors[Math.floor(Math.random() * colors.length)];
-            sq.style.borderColor = 'currentColor';
-            sq.style.animation = `shoot ${3 + Math.random() * 3}s linear forwards`;
+        // Spawn meteor envelopes
+        for(let i=0; i<count; i++) {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor-envelope';
             
-            canvas.appendChild(sq);
-            setTimeout(() => sq.remove(), 6000);
+            // Randomize position, delay, and duration
+            const left = Math.random() * 100;
+            const delay = Math.random() * 8;
+            const duration = 4 + Math.random() * 6; // 4 to 10 seconds
+            
+            meteor.style.top = "-50px";
+            meteor.style.left = `${left}%`;
+            meteor.style.animation = `meteor-fall ${duration}s linear infinite`;
+            meteor.style.animationDelay = `${delay}s`;
+            
+            // Envelope Icon
+            meteor.innerHTML = `<i class="fas fa-envelope"></i> <div class="meteor-tail"></div>`;
+            
+            canvas.appendChild(meteor);
         }
-
-        setInterval(spawnShootingSquare, 1500);
-        for(let i=0; i<3; i++) setTimeout(spawnShootingSquare, i * 500);
     </script>
 </body>
 </html>
