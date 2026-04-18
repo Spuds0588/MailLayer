@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - MailLayer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <style>
+        :root {
+            --burnt-tangerine: #e03616;
+            --black: #000000;
+            --white: #ffffff;
+            --text-dim: #9ca3af;
+        }
+        body { 
+            background-color: var(--black); 
+            color: var(--white); 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            min-height: 100vh;
+        }
+        .content-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 4rem;
+            margin-top: 4rem;
+            margin-bottom: 4rem;
+        }
+        h1, h2, h3 { color: var(--white) !important; }
+        h1 { border-bottom: 2px solid var(--burnt-tangerine); padding-bottom: 1rem; margin-bottom: 2rem !important; }
+        a { color: var(--burnt-tangerine); }
+        a:hover { color: #ff4d2e; }
+        p { color: var(--text-dim); }
+        ul li { color: var(--text-dim); }
+        .back-link { display: inline-block; margin-bottom: 2rem; font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container" style="max-width: 800px;">
+            <a href="index.html" class="back-link">&larr; Back to Home</a>
+            <div class="content-box content">
+                <h1>Privacy Policy</h1>
+                <p><em>Last Updated: April 2026</em></p>
+
+                <h2>1. Introduction</h2>
+                <p>MailLayer ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension collects, uses, and safeguards your information.</p>
+
+                <h2>2. Data We Collect</h2>
+                <p>MailLayer operates primarily locally on your device. We do not collect, store, or transmit any of your emails, passwords, or personal communications to our servers. The extension interacts with the following data solely to provide its core functionality:</p>
+                <ul>
+                    <li><strong>Authentication Tokens:</strong> We request OAuth tokens from Google and Microsoft (Outlook) to allow you to send emails directly from the extension. These tokens are stored securely in your browser's local storage and are never sent to MailLayer servers.</li>
+                    <li><strong>Drafts and Templates:</strong> Any email templates or drafts you create are saved locally using Chrome's `chrome.storage.local` API.</li>
+                    <li><strong>Signatures:</strong> Your rich-text signature is stored locally on your device.</li>
+                </ul>
+
+                <h2>3. Third-Party Services</h2>
+                <p>To function, MailLayer interacts with third-party APIs (Google Gmail API and Microsoft Graph API). Your use of these integrations is governed by the respective privacy policies of Google and Microsoft. We only use these APIs to send emails on your behalf when explicitly triggered by you.</p>
+
+                <h2>4. Data Sharing and Disclosure</h2>
+                <p>Because we do not collect your personal data or email content on our servers, we do not share, sell, or disclose your information to any third parties.</p>
+
+                <h2>5. Security</h2>
+                <p>We rely on Google Chrome's built-in extension security architecture and standard OAuth 2.0 protocols to ensure your credentials remain secure. We do not have access to your passwords.</p>
+
+                <h2>6. Changes to This Policy</h2>
+                <p>We may update our Privacy Policy from time to time. We will notify you of any changes by updating the "Last Updated" date at the top of this page.</p>
+
+                <h2>7. Contact Us</h2>
+                <p>If you have any questions about this Privacy Policy, please contact us via our GitHub repository issues page.</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
