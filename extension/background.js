@@ -59,7 +59,19 @@ function sendStandardResponse(sendResponse, success, data = null, error = null) 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[MailLayer Background] onMessage:', message);
 
+  // CRITICAL: sidePanel.open() must be called in response to a user gesture.
+  // We handle it synchronously here before any async 'await' breaks the gesture context.
+  if (message.action === 'intercept_mailto' && !message.data?.sendDirectly) {
+    if (message.data?.openSidebar || settings.preferredEditor === 'sidebar') {
+      console.log('[MailLayer Background] Opening side panel (gesture preserved).');
+      chrome.sidePanel.open({ tabId: sender.tab.id }).catch(err => {
+        console.error('[MailLayer Background] sidePanel.open failed:', err);
+      });
+    }
+  }
+
   handleMessage(message, sender)
+
     .then(result => {
       console.log('[MailLayer Background] handleMessage success:', result);
       sendStandardResponse(sendResponse, true, result);
@@ -99,8 +111,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  * Returns a promise that resolves with the data to be sent back.
  */
 async function handleMessage(message, sender) {
-  const res = await chrome.storage.local.get(['settings']);
-  const currentSettings = res.settings || DEFAULT_SETTINGS;
+  // Use the global 'settings' which is kept in sync via storage.onChanged
+  const currentSettings = settings;
+
 
   // 1. Direct Send Request (Prioritize this even if action is intercept_mailto)
   if (message.data?.sendDirectly || message.action === 'send_email') {
@@ -135,12 +148,13 @@ async function handleMessage(message, sender) {
     await chrome.storage.local.set({ currentDraft: data });
 
     if (data.openSidebar || currentSettings.preferredEditor === 'sidebar') {
-      chrome.sidePanel.open({ tabId: sender.tab.id });
+      // Note: sidePanel.open is already called synchronously in the listener for gesture support
       return { action: 'sidebar_opening' };
     } else {
       chrome.tabs.sendMessage(sender.tab.id, { action: 'open_modal', data: data });
       return { action: 'modal_opening' };
     }
+
   }
 
 
