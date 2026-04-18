@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailLayer - Animated Background</title>
+    <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+    <style>
+        :root {
+            --burnt-tangerine: #e03616;
+            --black: #000000;
+        }
+
+        html { background-color: var(--black); overflow: hidden; }
+        body { 
+            background-color: transparent; 
+            margin: 0;
+            position: relative;
+        }
+
+        /* --- Background Animation: Meteor Envelopes --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(10,10,15,0.8) 100%);
+        }
+
+        .bg-gradient-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(224, 54, 22, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 100% 100%, rgba(88, 53, 94, 0.15) 0%, transparent 50%);
+        }
+
+        @keyframes meteor-fall {
+            0% {
+                transform: rotate(-45deg) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: rotate(-45deg) translateX(-300vmax);
+                opacity: 0;
+            }
+        }
+
+        .meteor-envelope {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 42px;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+            /* The animation is dynamically applied in JS */
+        }
+
+        .meteor-tail {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 100%;
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(to right, rgba(224, 54, 22, 0.8), transparent);
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-canvas">
+        <div class="bg-gradient-overlay"></div>
+        <!-- Meteors will be injected here -->
+    </div>
+
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const count = 30; // Number of meteors
+        
+        // Spawn meteor envelopes
+        for(let i=0; i<count; i++) {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor-envelope';
+            
+            // Randomize position, delay, and duration
+            const left = Math.random() * 300; // Start across a wider horizontal area
+            const delay = Math.random() * 12;
+            const duration = 8 + Math.random() * 12; // 8 to 20 seconds for slower movement
+            
+            meteor.style.top = "-50px";
+            meteor.style.left = `${left}%`;
+            meteor.style.animation = `meteor-fall ${duration}s linear infinite`;
+            meteor.style.animationDelay = `${delay}s`;
+            
+            // Envelope Icon
+            meteor.innerHTML = `<i class="fas fa-envelope"></i> <div class="meteor-tail"></div>`;
+            
+            canvas.appendChild(meteor);
+        }
+    </script>
+</body>
+</html>
