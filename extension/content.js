@@ -91,7 +91,7 @@ function openModal(data) {
       <div class="maillayer-modal-container">
         <div class="maillayer-header" id="maillayer-drag-handle">
           <div style="display:flex; align-items:center;">
-            <img src="${chrome.runtime.getURL('Icons/icon32.png')}" width="20" height="20" style="margin-right:10px;" alt="Logo">
+            <img src="${chrome.runtime.getURL('Icons/icon32.png')}" width="28" height="28" style="margin-right:10px; filter: brightness(0) invert(1);" alt="Logo">
           </div>
           <button class="maillayer-close-btn" aria-label="Close">&times;</button>
         </div>

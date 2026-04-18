@@ -54,7 +54,8 @@
     {
       "resources": [
         "modal.css",
-        "vendor/quill/quill.snow.css"
+        "vendor/quill/quill.snow.css",
+        "Icons/*.png"
       ],
       "matches": ["<all_urls>"]
     }
