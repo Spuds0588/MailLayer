@@ -93,9 +93,20 @@ function openModal(data) {
           <div style="display:flex; align-items:center;">
             <img src="${chrome.runtime.getURL('Icons/icon32.png')}" width="28" height="28" style="margin-right:10px; filter: brightness(0) invert(1);" alt="Logo">
           </div>
-          <button class="maillayer-close-btn" aria-label="Close">&times;</button>
+          <div style="display:flex; align-items:center;">
+            <button class="maillayer-templates-btn" id="ml-gallery-trigger">
+               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+               Templates
+            </button>
+            <button class="maillayer-close-btn" aria-label="Close">&times;</button>
+          </div>
+        </div>
+
+        <div class="maillayer-template-gallery" id="ml-template-gallery">
+            <!-- Templates will be rendered here -->
         </div>
         <div class="maillayer-body">
+
             <div class="maillayer-row">
                 <div class="maillayer-label-cell">To</div>
                 <div class="maillayer-input-cell">
@@ -326,6 +337,72 @@ function openModal(data) {
         sendBtn.innerText = 'Error: Refresh Page';
     }
   };
+
+  // --- Template Gallery Logic ---
+  const gallery = container.querySelector('#ml-template-gallery');
+  const galleryTrigger = container.querySelector('#ml-gallery-trigger');
+
+  const toggleGallery = async () => {
+      const isActive = gallery.classList.toggle('active');
+      galleryTrigger.classList.toggle('active');
+      
+      if (isActive) {
+          galleryTrigger.innerText = 'Close Gallery';
+          renderGallery();
+      } else {
+          galleryTrigger.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Templates`;
+      }
+  };
+
+  const renderGallery = async () => {
+      const { settings } = await chrome.storage.local.get(['settings']);
+      const templates = settings?.templates || [];
+      
+      if (templates.length === 0) {
+          gallery.innerHTML = '<div style="color:#9ca3af; grid-column: 1/-1; text-align:center; padding:40px;">No templates found. Create some in the extension options!</div>';
+          return;
+      }
+
+      gallery.innerHTML = templates.map((tpl, idx) => `
+          <div class="maillayer-template-card" data-index="${idx}">
+              <h4>${escapeHTML(tpl.name)}</h4>
+              <p>${escapeHTML(tpl.subject || 'No Subject')}</p>
+          </div>
+      `).join('');
+
+      gallery.querySelectorAll('.maillayer-template-card').forEach(card => {
+          card.onclick = () => {
+              applyTemplate(templates[card.dataset.index], settings?.signature);
+              toggleGallery();
+          };
+      });
+  };
+
+  const applyTemplate = (tpl, signatureHtml) => {
+      if (tpl.subject) container.querySelector('#ml-subject').value = tpl.subject;
+      if (tpl.cc) {
+          container.querySelector('#ml-cc').value = tpl.cc;
+          container.querySelector('#ml-cc-row').style.display = 'flex';
+      }
+      if (tpl.bcc) {
+          container.querySelector('#ml-bcc').value = tpl.bcc;
+          container.querySelector('#ml-bcc-row').style.display = 'flex';
+      }
+      if (tpl.body) {
+          let newBody = tpl.body;
+          if (signatureHtml) {
+              const formattedSignature = `<br><br><div class="ml-signature-block" contenteditable="false" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-top: 20px;">${signatureHtml}</div>`;
+              newBody += formattedSignature;
+          }
+          quill.clipboard.dangerouslyPasteHTML(newBody);
+      }
+      if (tpl.attachments && tpl.attachments.length > 0) {
+          container._mlAttachments = [...(container._mlAttachments || []), ...tpl.attachments];
+          renderAttachments();
+      }
+  };
+
+  galleryTrigger.onclick = toggleGallery;
 
   chrome.runtime.sendMessage({ action: 'modal_ready' }); 
 }

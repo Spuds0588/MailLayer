@@ -182,12 +182,81 @@
             color: #9ca3af !important;
             font-size: 0.9em !important;
         }
+
+        /* Template Gallery Styles */
+        .maillayer-template-gallery {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
+            bottom: 80px;
+            background: var(--black);
+            z-index: 100;
+            padding: 1rem;
+            overflow-y: auto;
+            display: none;
+        }
+        .maillayer-template-gallery.active {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .maillayer-template-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .maillayer-template-card:hover {
+            border-color: var(--burnt-tangerine);
+            background: rgba(224, 54, 22, 0.05);
+        }
+        .maillayer-template-card h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: white;
+        }
+        .maillayer-template-card p {
+            margin: 4px 0 0 0;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .templates-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .templates-btn.active {
+            background: white;
+            color: var(--burnt-tangerine);
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <img src="Icons/icon32.png" width="24" height="24" alt="Logo">
+        <button class="templates-btn" id="ml-gallery-trigger">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            Templates
+        </button>
     </div>
+
+    <div class="maillayer-template-gallery" id="ml-template-gallery"></div>
+
 
     <div class="field">
         <label>Recipient</label>

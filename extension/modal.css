@@ -1,5 +1,89 @@
 /* MailLayer Modal Styles */
 
+.maillayer-template-gallery {
+    position: absolute !important;
+    top: 52px !important; /* Header height */
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 80px !important; /* Footer height */
+    background: #111111 !important;
+    z-index: 2147483648 !important;
+    padding: 24px !important;
+    overflow-y: auto !important;
+    display: none !important;
+    animation: mlFadeIn 0.2s ease-out !important;
+}
+
+.maillayer-template-gallery.active {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    gap: 16px !important;
+    align-content: start !important;
+}
+
+.maillayer-template-card {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: left !important;
+}
+
+.maillayer-template-card:hover {
+    background: rgba(224, 54, 22, 0.1) !important;
+    border-color: #e03616 !important;
+    transform: translateY(-2px) !important;
+}
+
+.maillayer-template-card h4 {
+    margin: 0 !important;
+    color: white !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+}
+
+.maillayer-template-card p {
+    margin: 0 !important;
+    color: #9ca3af !important;
+    font-size: 0.85rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.maillayer-templates-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: none !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.2s !important;
+    margin-right: 12px !important;
+}
+
+.maillayer-templates-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.maillayer-templates-btn.active {
+    background: white !important;
+    color: #e03616 !important;
+}
+
+
 .maillayer-modal-overlay {
     all: initial !important;
     position: fixed !important;

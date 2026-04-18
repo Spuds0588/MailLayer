@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDraft();
     setupListeners();
     setupAttachmentLogic();
+    setupTemplateGallery();
 });
+
 
 // Setup Attachment Logic
 function setupAttachmentLogic() {
@@ -55,6 +57,8 @@ function setupAttachmentLogic() {
             attachList.appendChild(chip);
         });
     }
+
+    attachList.addEventListener('renderAttachments', renderAttachments);
 }
 
 // Initialize Quill
@@ -132,6 +136,74 @@ function setupListeners() {
             window.close();
         }
     });
+}
+
+// Template Gallery Logic
+function setupTemplateGallery() {
+    const gallery = document.getElementById('ml-template-gallery');
+    const galleryTrigger = document.getElementById('ml-gallery-trigger');
+
+    const toggleGallery = async () => {
+        const isActive = gallery.classList.toggle('active');
+        galleryTrigger.classList.toggle('active');
+        
+        if (isActive) {
+            galleryTrigger.innerHTML = 'Close Gallery';
+            renderGallery();
+        } else {
+            galleryTrigger.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Templates`;
+        }
+    };
+
+    const renderGallery = async () => {
+        const { settings } = await chrome.storage.local.get(['settings']);
+        const templates = settings?.templates || [];
+        
+        if (templates.length === 0) {
+            gallery.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:40px;">No templates found. Create some in the extension options!</div>';
+            return;
+        }
+
+        gallery.innerHTML = templates.map((tpl, idx) => `
+            <div class="maillayer-template-card" data-index="${idx}">
+                <h4>${tpl.name}</h4>
+                <p>${tpl.subject || 'No Subject'}</p>
+            </div>
+        `).join('');
+
+        gallery.querySelectorAll('.maillayer-template-card').forEach(card => {
+            card.onclick = () => {
+                applyTemplate(templates[card.dataset.index], settings?.signature);
+                toggleGallery();
+            };
+        });
+    };
+
+    const applyTemplate = (tpl, signatureHtml) => {
+        if (tpl.subject) document.getElementById('ml-subject').value = tpl.subject;
+        if (tpl.cc) document.getElementById('ml-cc').value = tpl.cc;
+        if (tpl.bcc) document.getElementById('ml-bcc').value = tpl.bcc;
+        if (tpl.body) {
+            let newBody = tpl.body;
+            if (signatureHtml) {
+                const formattedSignature = `<br><br><div class="ml-signature-block" contenteditable="false" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-top: 20px;">${signatureHtml}</div>`;
+                newBody += formattedSignature;
+            }
+            quill.clipboard.dangerouslyPasteHTML(newBody);
+        }
+        if (tpl.attachments && tpl.attachments.length > 0) {
+            attachments = [...attachments, ...tpl.attachments];
+            // Re-render attachments logic is inside setupAttachmentLogic, 
+            // but we need a global reference or just trigger a re-render.
+            // A quick fix is to dispatch an event or expose the render function.
+            // Since this is all in the same scope via global attachments array, we'll need to trigger the render manually.
+            // I'll dispatch a custom event on the attachList to handle this cleanly.
+            const event = new CustomEvent('renderAttachments');
+            document.getElementById('ml-attachments-list').dispatchEvent(event);
+        }
+    };
+
+    galleryTrigger.onclick = toggleGallery;
 }
 
 // Listen for storage changes to sync draft if sidebar is open

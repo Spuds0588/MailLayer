@@ -212,9 +212,57 @@
 
         <div class="field mb-6">
             <label class="field-label" style="color: var(--burnt-tangerine)">Email Signature (Rich Text)</label>
-            <div id="signature-editor" style="min-height: 150px;"></div>
+            <div id="signature-editor" style="min-height: 120px; background: rgba(255,255,255,0.02); border-radius: 12px;"></div>
             <p class="help has-text-grey-light">Appended to all outgoing messages.</p>
         </div>
+
+        <hr style="background-color: rgba(255,255,255,0.05);">
+
+        <div class="field mb-6">
+            <label class="field-label" style="color: var(--burnt-tangerine)">Email Templates</label>
+            <div id="templates-list" class="mb-4">
+                <!-- Templates will be rendered here -->
+            </div>
+            
+            <div id="template-editor-container" style="display:none; background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <input type="hidden" id="tpl-id">
+                <div class="field mb-3">
+                    <label class="label is-small has-text-grey">Template Name</label>
+                    <input type="text" id="tpl-name" class="input is-small" style="background:transparent; color:white; border-color:rgba(255,255,255,0.2);">
+                </div>
+                <div class="field mb-3">
+                    <label class="label is-small has-text-grey">Default Subject</label>
+                    <input type="text" id="tpl-subject" class="input is-small" style="background:transparent; color:white; border-color:rgba(255,255,255,0.2);">
+                </div>
+                <div class="columns is-mobile">
+                    <div class="column">
+                        <div class="field">
+                            <label class="label is-small has-text-grey">CC</label>
+                            <input type="text" id="tpl-cc" class="input is-small" style="background:transparent; color:white; border-color:rgba(255,255,255,0.2);">
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="field">
+                            <label class="label is-small has-text-grey">BCC</label>
+                            <input type="text" id="tpl-bcc" class="input is-small" style="background:transparent; color:white; border-color:rgba(255,255,255,0.2);">
+                        </div>
+                    </div>
+                </div>
+                <div class="field mb-4">
+                    <label class="label is-small has-text-grey">Template Body</label>
+                    <div id="tpl-body-editor" style="min-height: 150px; background: rgba(255,255,255,0.02); border-radius: 12px;"></div>
+                </div>
+                <div class="buttons is-right">
+                    <button id="cancel-template" class="button is-small is-dark">Cancel</button>
+                    <button id="save-template" class="button is-small is-primary">Save Template</button>
+                </div>
+            </div>
+
+            <button id="add-template-btn" class="button is-fullwidth is-dark" style="border: 1px dashed rgba(255,255,255,0.3); background: transparent; color: #9ca3af;">
+                + Add New Template
+            </button>
+        </div>
+
 
         <style>
             .status {
