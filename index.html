@@ -23,9 +23,9 @@
             --text-dim: #9ca3af;
         }
 
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; background-color: var(--black); }
         body { 
-            background-color: var(--black); 
+            background-color: transparent; 
             color: var(--text-main); 
             font-family: 'Inter', -apple-system, sans-serif; 
             margin: 0;
@@ -56,14 +56,17 @@
 
         @keyframes meteor-fall {
             0% {
-                transform: rotate(215deg) translateX(0);
+                transform: rotate(-45deg) translateX(0);
+                opacity: 0;
+            }
+            10% {
                 opacity: 1;
             }
             70% {
                 opacity: 1;
             }
             100% {
-                transform: rotate(215deg) translateX(-100vmax);
+                transform: rotate(-45deg) translateX(-300vmax);
                 opacity: 0;
             }
         }
@@ -71,8 +74,8 @@
         .meteor-envelope {
             position: absolute;
             color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
-            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+            font-size: 42px;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
             /* The animation is dynamically applied in JS */
         }
 
@@ -81,8 +84,8 @@
             top: 50%;
             transform: translateY(-50%);
             left: 100%;
-            width: 80px;
-            height: 1px;
+            width: 150px;
+            height: 2px;
             background: linear-gradient(to right, rgba(224, 54, 22, 0.8), transparent);
         }
 
@@ -219,14 +222,7 @@
         <!-- Meteors will be injected here -->
     </div>
 
-    <nav class="navbar is-transparent" style="position: absolute; width: 100%; top: 0; left: 0; padding: 2rem; z-index: 10; background: transparent;">
-        <div class="container" style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-            <a href="index.html" class="button is-dark is-rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; transition: all 0.2s;">Home</a>
-            <a href="privacy.html" class="button is-dark is-rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; transition: all 0.2s;">Privacy Policy</a>
-            <a href="terms.html" class="button is-dark is-rounded" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; transition: all 0.2s;">Terms of Service</a>
-            <a href="https://chrome.google.com/webstore/detail/cdkbfdlipmopkdfjbceadindobfpajma" target="_blank" class="button is-primary is-rounded" style="background-color: var(--burnt-tangerine); border: none; font-weight: 700; box-shadow: 0 4px 15px rgba(224, 54, 22, 0.3);">Chrome Web Store</a>
-        </div>
-    </nav>
+
     <section class="hero">
         <div class="hero-body">
             <div class="container has-text-centered">
@@ -238,8 +234,7 @@
                     Compose emails instantly using our premium In-Page Modal or the Chrome Side Panel. Connects directly to Gmail and Outlook APIs.
                 </h2>
                 <div class="mt-6">
-                    <a href="https://github.com" class="button is-primary is-large is-rounded px-6">Add to Chrome — It's Free</a>
-                    <p class="is-size-7 mt-4" style="color: var(--text-dim); opacity: 0.7;">Join 10k+ professionals using MailLayer.</p>
+                    <a href="https://github.com/Spuds0588/MailLayer" target="_blank" class="button is-primary is-large is-rounded px-6"><i class="fab fa-github mr-2"></i> View Source Code</a>
                 </div>
             </div>
         </div>
@@ -306,8 +301,8 @@
     <section id="cta" class="section">
         <div class="container has-text-centered">
             <h2 class="title is-2 section-heading">Ready to Upgrade Your Web Experience?</h2>
-            <p class="is-size-5 mb-6">Join thousands of users who make the web feel like home.</p>
-            <a href="#" class="button is-primary is-large is-rounded px-6">Download MailLayer Now</a>
+            <p class="is-size-5 mb-6">Get started today and make the web feel like home.</p>
+            <a href="https://github.com/Spuds0588/MailLayer" target="_blank" class="button is-primary is-large is-rounded px-6"><i class="fab fa-github mr-2"></i> View on GitHub</a>
         </div>
     </section>
 
@@ -320,10 +315,11 @@
                 </div>
                 <div class="column is-8 has-text-right">
                     <div class="links">
+                        <a href="index.html" class="mx-3">Home</a>
                         <a href="#features" class="mx-3">Features</a>
-                        <a href="https://github.com" class="mx-3">Open Source</a>
-                        <a href="privacy.html" class="mx-3">Privacy</a>
-                        <a href="terms.html" class="mx-3">Terms</a>
+                        <a href="https://github.com/Spuds0588/MailLayer" class="mx-3">Open Source</a>
+                        <a href="privacy.html" class="mx-3">Privacy Policy</a>
+                        <a href="terms.html" class="mx-3">Terms of Service</a>
                     </div>
                 </div>
             </div>
@@ -343,9 +339,9 @@
             meteor.className = 'meteor-envelope';
             
             // Randomize position, delay, and duration
-            const left = Math.random() * 100;
-            const delay = Math.random() * 8;
-            const duration = 4 + Math.random() * 6; // 4 to 10 seconds
+            const left = Math.random() * 300; // Start across a wider horizontal area
+            const delay = Math.random() * 12;
+            const duration = 8 + Math.random() * 12; // 8 to 20 seconds for slower movement
             
             meteor.style.top = "-50px";
             meteor.style.left = `${left}%`;

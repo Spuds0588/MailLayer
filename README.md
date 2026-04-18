@@ -4,6 +4,13 @@ Integrated Email for the Modern Web.
 
 MailLayer is a Chrome extension that intercepts `mailto:` links across the web and provides an integrated email composition experience via a premium In-Page Modal or the Chrome Side Panel. No more context switching or clunky desktop mail clients.
 
+## 🔗 Links
+
+- [Home Page](https://spuds0588.github.io/MailLayer/index.html)
+- [Privacy Policy](https://spuds0588.github.io/MailLayer/privacy.html)
+- [Terms of Service](https://spuds0588.github.io/MailLayer/terms.html)
+- [Chrome Web Store](https://chrome.google.com/webstore/detail/cdkbfdlipmopkdfjbceadindobfpajma)
+
 ## 🚀 Key Features
 
 -   **Zero Context Switching:** Compose emails without leaving your current tab.
