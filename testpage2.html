@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyLink Systems | Enterprise Solutions</title>
+    <style>
+        :root {
+            --primary-blue: #0066ff;
+            --dark-blue: #0044cc;
+            --text-dark: #111827;
+            --text-gray: #4b5563;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+            background-color: var(--white);
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        /* Navigation placeholder */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 5%;
+            position: absolute;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            letter-spacing: -1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: var(--text-gray);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links li a:hover {
+            color: var(--primary-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%), 
+                        url('assets/hero-bg.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hero-content {
+            max-width: 650px;
+            z-index: 2;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(0, 102, 255, 0.1);
+            color: var(--primary-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-size: 4rem;
+            line-height: 1.1;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        h1 span {
+            color: var(--primary-blue);
+        }
+
+        .hero-text {
+            font-size: 1.25rem;
+            color: var(--text-gray);
+            margin-bottom: 2.5rem;
+            max-width: 550px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 1.2rem 2.5rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 15px -3px rgba(0, 102, 255, 0.3);
+        }
+
+        .cta-button:hover {
+            background-color: var(--dark-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 25px -5px rgba(0, 102, 255, 0.4);
+        }
+
+        /* Decorative Elements */
+        .hero-shapes {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 3rem; }
+            .hero { text-align: center; justify-content: center; }
+            .hero-text { margin-left: auto; margin-right: auto; }
+            .nav-links { display: none; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">SKYLINK.</div>
+        <ul class="nav-links">
+            <li><a href="#">Solutions</a></li>
+            <li><a href="#">Enterprise</a></li>
+            <li><a href="#">Resources</a></li>
+            <li><a href="#">Pricing</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <span class="badge">Next-Gen Architecture</span>
+            <h1>Elevate Your <span>Enterprise</span> Communication.</h1>
+            <p class="hero-text">
+                Seamless integration, infinite possibilities. Experience the future of workflow optimization with SkyLink's proprietary architecture designed for global scale.
+            </p>
+            
+            <a href="mailto:sales@skylink-systems.io?subject=Enterprise%20Inquiry%20-%20SkyLink%20Solutions&body=Hello%20SkyLink%20Sales%20Team%2C%0A%0AWe%20are%20interested%20in%20learning%20more%20about%20your%20enterprise%20communication%20solutions.%20Please%20provide%20us%20with%20more%20information%20regarding%20your%20current%20offerings.%0A%0ABest%20regards%2C%0A[Your%20Name]" class="cta-button">
+                Email Sales
+            </a>
+        </div>
+    </section>
+
+</body>
+</html>

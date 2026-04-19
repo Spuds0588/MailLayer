@@ -138,7 +138,11 @@
             color: var(--white);
             box-shadow: 0 4px 15px rgba(224, 54, 22, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 2rem 3rem;
+        }
+
+        .hero-btn {
+            padding: 2rem 3rem !important;
+            height: auto !important;
         }
 
         .button.is-primary:hover { 
@@ -186,7 +190,7 @@
         .feature-icon { 
             font-size: 3rem; 
             margin-bottom: 2rem;
-            color: var(--blue-bell);
+            color: var(--burnt-tangerine);
         }
 
         footer { 
@@ -214,6 +218,43 @@
         ::-webkit-scrollbar-track { background: var(--black); }
         ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #333; }
+
+        /* Custom Video Controls */
+        .video-controls-overlay {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-container:hover .video-controls-overlay {
+            opacity: 1;
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(224, 54, 22, 0.8);
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -234,7 +275,36 @@
                     Compose emails instantly using our premium In-Page Modal or the Chrome Side Panel. Connects directly to Gmail and Outlook APIs.
                 </h2>
                 <div class="mt-6">
-                    <a href="https://github.com/Spuds0588/MailLayer" target="_blank" class="button is-primary is-large is-rounded px-6"><i class="fab fa-github mr-2"></i> View Source Code</a>
+                    <a href="https://chromewebstore.google.com/detail/maillayer/cdkbfdlipmopkdfjbceadindobfpajma?authuser=0&hl=en" target="_blank" class="button is-primary is-large is-rounded px-6 hero-btn"><i class="fab fa-chrome mr-2"></i> Add to Chrome</a>
+                    <a href="https://github.com/Spuds0588/MailLayer" target="_blank" class="button is-dark is-large is-rounded px-6 ml-3 hero-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);"><i class="fab fa-github mr-2"></i> View Source</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="demo" class="section">
+        <div class="container has-text-centered">
+            <h2 class="title is-2 section-heading">See MailLayer in Action</h2>
+            <div class="video-container" style="max-width: 900px; margin: 0 auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); background: #000;">
+                <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+                    <video 
+                        id="promo-video"
+                        muted 
+                        loop
+                        playsinline 
+                        poster="assets/MailLayer%20Youtube%20Thumb.png"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        <source src="assets/MailLayer%20Promo%20Video.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-controls-overlay">
+                        <button id="mute-toggle" class="control-btn" title="Toggle Sound">
+                            <i class="fas fa-volume-mute"></i>
+                        </button>
+                        <button id="restart-video" class="control-btn" title="Restart Video">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -259,7 +329,9 @@
                 <div class="column is-6">
                     <div class="image-box">
                         <div class="has-text-centered">
-                            <div class="feature-icon" style="font-size: 5rem;"><i class="fas fa-envelope-open-text"></i></div>
+                            <div class="feature-icon" style="margin-bottom: 2rem;">
+                                <img src="assets/MailLayer%20Icon%20Raw%20(Transparent).png" alt="MailLayer Icon" style="width: 140px; height: auto; filter: drop-shadow(0 0 25px rgba(224, 54, 22, 0.4));">
+                            </div>
                             <p class="is-size-3 has-text-weight-bold" style="color: var(--white); font-weight: 800;">MailLayer Focus</p>
                             <p class="mt-4" style="color: var(--blue-bell); font-weight: 600;">Stay inside your current workflow.</p>
                         </div>
@@ -302,7 +374,7 @@
         <div class="container has-text-centered">
             <h2 class="title is-2 section-heading">Ready to Upgrade Your Web Experience?</h2>
             <p class="is-size-5 mb-6">Get started today and make the web feel like home.</p>
-            <a href="https://github.com/Spuds0588/MailLayer" target="_blank" class="button is-primary is-large is-rounded px-6"><i class="fab fa-github mr-2"></i> View on GitHub</a>
+            <a href="https://chromewebstore.google.com/detail/maillayer/cdkbfdlipmopkdfjbceadindobfpajma?authuser=0&hl=en" target="_blank" class="button is-primary is-large is-rounded px-6"><i class="fab fa-chrome mr-2"></i> Add to Chrome</a>
         </div>
     </section>
 
@@ -317,7 +389,8 @@
                     <div class="links">
                         <a href="index.html" class="mx-3">Home</a>
                         <a href="#features" class="mx-3">Features</a>
-                        <a href="https://github.com/Spuds0588/MailLayer" class="mx-3">Open Source</a>
+                        <a href="https://chromewebstore.google.com/detail/maillayer/cdkbfdlipmopkdfjbceadindobfpajma?authuser=0&hl=en" class="mx-3" target="_blank">Chrome Store</a>
+                        <a href="https://github.com/Spuds0588/MailLayer" class="mx-3" target="_blank">Open Source</a>
                         <a href="privacy.html" class="mx-3">Privacy Policy</a>
                         <a href="terms.html" class="mx-3">Terms of Service</a>
                     </div>
@@ -353,6 +426,59 @@
             
             canvas.appendChild(meteor);
         }
+
+        // Play video on scroll
+        const promoVideo = document.getElementById('promo-video');
+        const observerOptions = {
+            root: null,
+            threshold: 0.5 // Play when 50% of the video is visible
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    promoVideo.play().catch(error => {
+                        console.log("Autoplay was prevented:", error);
+                    });
+                } else {
+                    promoVideo.pause();
+                }
+            });
+        }, observerOptions);
+
+        observer.observe(promoVideo);
+
+        // Custom Control Logic
+        const muteToggle = document.getElementById('mute-toggle');
+        const restartBtn = document.getElementById('restart-video');
+        const muteIcon = muteToggle.querySelector('i');
+
+        muteToggle.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent pausing when clicking the toggle
+            promoVideo.muted = !promoVideo.muted;
+            if (promoVideo.muted) {
+                muteIcon.className = 'fas fa-volume-mute';
+            } else {
+                muteIcon.className = 'fas fa-volume-up';
+                promoVideo.loop = false; // Disable looping when unmuted
+                promoVideo.play();
+            }
+        });
+
+        restartBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent pausing when clicking restart
+            promoVideo.currentTime = 0;
+            promoVideo.play();
+        });
+
+        // Click on video to pause/resume
+        promoVideo.addEventListener('click', () => {
+            if (promoVideo.paused) {
+                promoVideo.play();
+            } else {
+                promoVideo.pause();
+            }
+        });
     </script>
 </body>
 </html>
