@@ -53,12 +53,14 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     const selectedText = info.selectionText ? info.selectionText.trim() : '';
     const mailtoData = { to: '', cc: '', bcc: '', subject: '', body: '' };
 
-    // Extract email from selection using regex
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-    const match = selectedText.match(emailRegex);
+    // Extract all emails from selection using regex
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const matches = selectedText.match(emailRegex);
     
-    if (match && match[0]) {
-      mailtoData.to = match[0];
+    if (matches && matches.length > 0) {
+      // Deduplicate and join with semicolon
+      const uniqueEmails = [...new Set(matches)];
+      mailtoData.to = uniqueEmails.join('; ');
 
       if (settings.preferredEditor === 'sidebar') {
         chrome.sidePanel.open({ tabId: tab.id }).catch(err => {
