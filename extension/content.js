@@ -292,22 +292,39 @@ function injectModalDOM(data) {
   // Drag Logic
   const handle = container.querySelector('#maillayer-drag-handle');
   const modalBox = container.querySelector('.maillayer-modal-container');
+  const overlay = container.querySelector('.maillayer-modal-overlay');
   let isDragging = false;
   let offsetX, offsetY;
 
   handle.onmousedown = (e) => {
     isDragging = true;
+    
+    // Make the background transparent and click-through
+    overlay.classList.add('dragged');
+
+    // Switch to absolute positioning for smooth dragging relative to the viewport
+    if (modalBox.style.position !== 'absolute') {
+      const rect = modalBox.getBoundingClientRect();
+      modalBox.style.setProperty('position', 'absolute', 'important');
+      modalBox.style.setProperty('margin', '0', 'important');
+      modalBox.style.setProperty('left', rect.left + 'px', 'important');
+      modalBox.style.setProperty('top', rect.top + 'px', 'important');
+    }
+
     offsetX = e.clientX - modalBox.getBoundingClientRect().left;
     offsetY = e.clientY - modalBox.getBoundingClientRect().top;
   };
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    modalBox.style.left = (e.clientX - offsetX + modalBox.offsetWidth/2) + 'px';
-    modalBox.style.top = (e.clientY - offsetY + modalBox.offsetHeight/2) + 'px';
+    e.preventDefault(); // Prevent text selection while dragging
+    modalBox.style.setProperty('left', (e.clientX - offsetX) + 'px', 'important');
+    modalBox.style.setProperty('top', (e.clientY - offsetY) + 'px', 'important');
   });
 
-  document.addEventListener('mouseup', () => isDragging = false);
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
 
   const sendBtn = container.querySelector('.maillayer-btn-primary');
   sendBtn.onclick = () => {

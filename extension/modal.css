@@ -101,6 +101,12 @@
     animation: mlFadeIn 0.4s ease-out forwards !important;
 }
 
+.maillayer-modal-overlay.dragged {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    pointer-events: none !important;
+}
+
 @keyframes mlFadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -109,6 +115,7 @@
 .maillayer-modal-container {
     all: initial !important;
     position: relative !important;
+    pointer-events: auto !important;
     width: 800px !important;
     max-width: 90vw !important;
     max-height: 90vh !important;
