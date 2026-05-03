@@ -10,7 +10,54 @@ document.addEventListener('DOMContentLoaded', () => {
     setupListeners();
     setupAttachmentLogic();
     setupTemplateGallery();
+    setupExcludeSiteLogic();
 });
+
+function setupExcludeSiteLogic() {
+    const excludeBtn = document.getElementById('ml-exclude-site-btn');
+    const excludeText = document.getElementById('ml-exclude-text');
+    chrome.storage.local.get(['settings'], (result) => {
+        const settings = result.settings || {};
+        if (settings.magicUX === 'enabled') {
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                if (tabs[0] && tabs[0].url) {
+                    const url = new URL(tabs[0].url);
+                    if (url.protocol.startsWith('http')) {
+                        excludeBtn.style.display = 'flex';
+                        
+                        const hostname = url.hostname;
+                        const ignoredSites = settings.ignoredSites || [];
+                        
+                        if (ignoredSites.includes(hostname)) {
+                            excludeText.innerText = 'Enable on Site';
+                            excludeBtn.onclick = () => toggleExclude(hostname, false);
+                        } else {
+                            excludeText.innerText = 'Exclude Site';
+                            excludeBtn.onclick = () => toggleExclude(hostname, true);
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    function toggleExclude(hostname, exclude) {
+        chrome.storage.local.get(['settings'], (result) => {
+            const settings = result.settings || {};
+            let ignoredSites = settings.ignoredSites || [];
+            if (exclude) {
+                if (!ignoredSites.includes(hostname)) ignoredSites.push(hostname);
+            } else {
+                ignoredSites = ignoredSites.filter(h => h !== hostname);
+            }
+            settings.ignoredSites = ignoredSites;
+            chrome.storage.local.set({ settings }, () => {
+                alert(exclude ? `Auto-Detect disabled on ${hostname}. Refresh the page.` : `Auto-Detect enabled on ${hostname}. Refresh the page.`);
+                setupExcludeSiteLogic();
+            });
+        });
+    }
+}
 
 
 // Setup Attachment Logic

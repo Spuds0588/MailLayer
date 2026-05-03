@@ -179,19 +179,28 @@ function injectModalDOM(data) {
                 </div>
             </div>
 
+            <div style="display:flex; justify-content:flex-start; margin-bottom: 8px; margin-top: 4px;">
+                <button class="maillayer-btn-icon" id="ml-attach-btn" title="Add Attachment" style="display:flex; align-items:center; gap:6px; font-size:12px; color:#9ca3af; background:transparent; border:none; cursor:pointer;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-2.48-2.02-4.5-4.5-4.5S7 2.52 7 5v12.5c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5V6h-1.5z"/>
+                    </svg>
+                    <span>Add Attachment</span>
+                </button>
+                <input type="file" id="ml-file-input" multiple style="display:none;">
+            </div>
+
+            <div id="ml-attachments-list" style="margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
+
             <div class="maillayer-editor-row">
                 <div id="ml-editor-container" style="min-height: 250px;"></div>
             </div>
-            <div id="ml-attachments-list" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
         </div>
         <div class="maillayer-footer" style="align-items: flex-start;">
-            <div style="display:flex; gap: 8px; align-items:center;">
-                <button class="maillayer-btn-icon" id="ml-attach-btn" title="Attach Files">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#eee">
-                        <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.66 1.34 3 3 3s3-1.34 3-3V5c0-2.48-2.02-4.5-4.5-4.5S7 2.52 7 5v12.5c0 3.59 2.91 6.5 6.5 6.5s6.5-2.91 6.5-6.5V6h-1.5z"/>
-                    </svg>
+            <div style="display:flex; gap: 8px; align-items:flex-start;">
+                <button class="maillayer-btn-icon" id="ml-exclude-site-btn" title="Disable Auto-Detect" style="display:none !important; align-items:center; gap:6px; color:#6b7280 !important; background:transparent !important; border:none !important; padding:4px !important; margin-top:10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>
+                    <span style="font-size:12px;" id="ml-exclude-text">Exclude Site</span>
                 </button>
-                <input type="file" id="ml-file-input" multiple style="display:none;">
             </div>
             <div style="flex:1"></div>
             
@@ -501,6 +510,31 @@ function injectModalDOM(data) {
 
   galleryTrigger.onclick = toggleGallery;
 
+  // Exclude Site Logic
+  const excludeBtn = container.querySelector('#ml-exclude-site-btn');
+  chrome.storage.local.get(['settings'], (result) => {
+    const settings = result.settings || {};
+    if (settings.magicUX === 'enabled') {
+       excludeBtn.style.setProperty('display', 'flex', 'important');
+       const hostname = window.location.hostname;
+       const ignored = (settings.ignoredSites || []).includes(hostname);
+       container.querySelector('#ml-exclude-text').innerText = ignored ? 'Enable on Site' : 'Exclude Site';
+       excludeBtn.onclick = () => {
+           let ignoredSites = settings.ignoredSites || [];
+           if (ignored) {
+               ignoredSites = ignoredSites.filter(h => h !== hostname);
+           } else {
+               if (!ignoredSites.includes(hostname)) ignoredSites.push(hostname);
+           }
+           settings.ignoredSites = ignoredSites;
+           chrome.storage.local.set({ settings }, () => {
+               alert(ignored ? `Auto-Detect enabled on ${hostname}. Refresh the page.` : `Auto-Detect disabled on ${hostname}. Refresh the page.`);
+               closeModal();
+           });
+       };
+    }
+  });
+
   chrome.runtime.sendMessage({ action: 'modal_ready' }); 
 }
 
@@ -530,7 +564,12 @@ function showFallbackTrigger() {
 function initMagicUX() {
   chrome.storage.local.get(['settings'], (result) => {
     if (result.settings?.magicUX === 'enabled') {
-      console.log('[MailLayer Content] Magic UX enabled. Scanning for emails...');
+      const ignoredSites = result.settings?.ignoredSites || [];
+      if (ignoredSites.includes(window.location.hostname)) {
+        console.log('[MailLayer Content] Auto-Detect disabled for this site.');
+        return;
+      }
+      console.log('[MailLayer Content] Auto-Detect enabled. Scanning for emails...');
       
       const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
       

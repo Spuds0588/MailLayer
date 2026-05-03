@@ -277,6 +277,33 @@ const handleOutlookAuth = () => {
     });
 };
 
+const renderExcludedSites = () => {
+    chrome.storage.local.get(['settings'], (result) => {
+        const list = document.getElementById('excluded-sites-list');
+        if (!list) return;
+        const ignoredSites = result.settings?.ignoredSites || [];
+        if (ignoredSites.length === 0) {
+            list.innerHTML = '<span style="color:#9ca3af; font-size:0.85rem;">No sites excluded yet. Use the modal or sidebar to exclude sites.</span>';
+            return;
+        }
+        
+        list.innerHTML = ignoredSites.map(site => `
+            <div style="background: rgba(224, 54, 22, 0.1); border: 1px solid var(--burnt-tangerine); color: white; padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+                ${site}
+                <span class="remove-site" data-site="${site}" style="color: var(--burnt-tangerine); cursor: pointer; font-weight: bold;">&times;</span>
+            </div>
+        `).join('');
+
+        list.querySelectorAll('.remove-site').forEach(btn => {
+            btn.onclick = () => {
+                const siteToRemove = btn.dataset.site;
+                result.settings.ignoredSites = ignoredSites.filter(s => s !== siteToRemove);
+                chrome.storage.local.set({ settings: result.settings }, renderExcludedSites);
+            };
+        });
+    });
+};
+
 const statusEl = document.getElementById('status');
 
 // Start
@@ -287,5 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initButtonGroups();
     restoreOptions();
     updateAuthStatus();
+    renderExcludedSites();
 });
 

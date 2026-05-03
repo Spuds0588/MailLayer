@@ -194,12 +194,19 @@
         </div>
 
         <div class="field mb-6">
-            <label class="field-label" style="color: var(--burnt-tangerine)">Magic UX (Auto-Linkifier)</label>
+            <label class="field-label" style="color: var(--burnt-tangerine)">Auto-Detect Page Emails</label>
             <div class="button-group" data-id="magicUX">
                 <button class="btn-option is-active" data-value="disabled">Disabled</button>
                 <button class="btn-option" data-value="enabled">Enabled</button>
             </div>
             <p class="help has-text-grey-light">Automatically turn plain-text emails on pages into clickable MailLayer links.</p>
+        </div>
+
+        <div class="field mb-6">
+            <label class="field-label" style="color: var(--burnt-tangerine)">Excluded Sites (Auto-Detect)</label>
+            <div id="excluded-sites-list" style="background: rgba(255,255,255,0.02); min-height: 50px; padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-wrap: wrap; gap: 8px;">
+            </div>
+            <p class="help has-text-grey-light">Auto-Detect will be disabled on these domains.</p>
         </div>
 
         <div class="field mb-6" id="account-section">
