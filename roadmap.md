@@ -2,7 +2,7 @@
 
 This file is private and ignored by version control. It tracks sensitive future features and business logic.
 
-## Planned Premium Features (Paid)
+## Planned Pro Features (Paid)
 - [ ] **Enterprise Connectors:**
     - Zoho Mail API Support.
     - Salesforce/HubSpot BCC integration.

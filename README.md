@@ -2,7 +2,7 @@
 
 Integrated Email for the Modern Web.
 
-MailLayer is a Chrome extension that intercepts `mailto:` links across the web and provides an integrated email composition experience via a premium In-Page Modal or the Chrome Side Panel. No more context switching or clunky desktop mail clients.
+MailLayer is a Chrome extension that creates a **universal email layer** over your entire web experience. It intercepts `mailto:` links and auto-detects plain-text email addresses, providing an integrated composition experience via an In-Page Modal or the Chrome Side Panel. No more context switching or clunky desktop mail clients.
 
 ## 🔗 Links
 
@@ -13,21 +13,25 @@ MailLayer is a Chrome extension that intercepts `mailto:` links across the web a
 
 ## 🚀 Key Features
 
--   **Zero Context Switching:** Compose emails without leaving your current tab.
--   **API-Powered Sending:** Direct integration with Gmail and Outlook APIs for fast, reliable sending in the background.
--   **Rich Text Editor:** Fully featured editor (powered by Quill.js) for composing your messages.
--   **File Attachments:** Easily attach files to your outgoing emails directly from the composer.
--   **Email Templates:** Save and apply full templates (Subject, CC, BCC, Body, Attachments) with a single click from the gallery view.
--   **Global Signatures:** Configure a rich-text signature that automatically appends to all outgoing messages.
--   **Side Panel Integration:** Choose between an elegant, shadow-DOM isolated in-page modal, or the native Chrome Side Panel.
+-   **Zero Context Switching:** Click an email, send your message, and stay exactly where you are.
+-   **Universal Email Detection:** Automatically transforms plain-text email addresses on any webpage into clickable links.
+-   **Smart Mailto Interception:** Stops disruptive browser redirects and clunky desktop app launches.
+-   **API-Powered Sending:** Secure integration with Gmail and Outlook APIs for background sending.
+-   **Keyboard Optimized:** Use `Ctrl+Enter` (or `Cmd+Enter`) to send instantly and `Esc` to discard.
+-   **Rich Text Editor:** Fully featured WYSIWYG editor (Quill.js) for professional formatting.
+-   **Email Templates:** Save and apply full templates (Subject, CC, BCC, Body) with a single click.
+-   **Global Signatures:** Automated rich-text signatures appended to every outgoing message.
+-   **Site Exclusion:** Easily blocklist specific domains where you want to disable auto-detection.
+-   **Flexible UI:** Choose between a shadow-DOM isolated in-page modal or the native Chrome Side Panel.
 
 ## 🛠️ Technical Overview
 
-MailLayer uses a sophisticated injection pattern to ensure compatibility with 99.9% of the web:
-1.  **Event Delegation:** Efficiently catches `mailto:` clicks at the document level.
+MailLayer uses a sophisticated injection pattern to ensure a seamless experience:
+1.  **Event Delegation:** Efficiently catches all email interactions at the document level.
 2.  **Shadow DOM Encapsulation:** Protects the modal UI from host site style bleed.
-3.  **OAuth Integration:** Uses `chrome.identity` and MSAL for secure API access.
-4.  **Fallback Logic:** Defaults to the in-page modal, falling back to the Side Panel if injection is blocked or fails.
+3.  **OAuth Integration:** Uses `chrome.identity` and MSAL for secure, direct API access.
+4.  **Auto-Detect Engine:** Scans and linkifies text-based email addresses without affecting page performance.
+5.  **Exclusion Logic:** Respects per-site user preferences to resolve DOM conflicts.
 
 ## 📦 Installation
 
