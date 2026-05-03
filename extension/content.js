@@ -428,3 +428,91 @@ function showFallbackTrigger() {
     };
     document.documentElement.appendChild(btn);
 }
+
+// --- Auto-Linkifier (Magic UX) ---
+function initMagicUX() {
+  chrome.storage.local.get(['settings'], (result) => {
+    if (result.settings?.magicUX === 'enabled') {
+      console.log('[MailLayer Content] Magic UX enabled. Scanning for emails...');
+      
+      const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+      
+      function scanForEmails(node) {
+        // Only scan elements, avoid script, style, textarea, input etc.
+        const skipTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'A', 'BUTTON', 'NOSCRIPT', 'IFRAME'];
+        
+        const textNodes = [];
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+          acceptNode: function(n) {
+            if (n.parentNode && skipTags.includes(n.parentNode.nodeName)) return NodeFilter.FILTER_REJECT;
+            if (n.parentNode && n.parentNode.classList?.contains('maillayer-magic-link')) return NodeFilter.FILTER_REJECT;
+            if (n.nodeValue.trim() === '') return NodeFilter.FILTER_SKIP;
+            if (emailRegex.test(n.nodeValue)) {
+              // Reset regex state since we tested it
+              emailRegex.lastIndex = 0;
+              return NodeFilter.FILTER_ACCEPT;
+            }
+            return NodeFilter.FILTER_SKIP;
+          }
+        }, false);
+
+        while (walker.nextNode()) {
+          textNodes.push(walker.currentNode);
+        }
+
+        textNodes.forEach(textNode => {
+          emailRegex.lastIndex = 0;
+          const text = textNode.nodeValue;
+          if (!emailRegex.test(text)) return;
+          
+          const span = document.createElement('span');
+          span.innerHTML = text.replace(emailRegex, (match) => {
+            return `<span class="maillayer-magic-link" style="border-bottom: 1px dashed #5998c5; color: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" data-email="${match}">${match} <svg width="12" height="12" viewBox="0 0 24 24" fill="#5998c5" style="vertical-align: middle;"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></span>`;
+          });
+          
+          textNode.parentNode.replaceChild(span, textNode);
+        });
+      }
+
+      // Initial scan
+      scanForEmails(document.body);
+      
+      // Mutation Observer for dynamically loaded content
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+               scanForEmails(node);
+            } else if (node.nodeType === Node.TEXT_NODE) {
+               if (node.parentNode) scanForEmails(node.parentNode);
+            }
+          });
+        });
+      });
+      
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Click listener for magic links (using delegation)
+      document.documentElement.addEventListener('click', (event) => {
+        const magicLink = event.target.closest('.maillayer-magic-link');
+        if (magicLink) {
+          event.preventDefault();
+          event.stopPropagation();
+          const email = magicLink.dataset.email;
+          const parsedData = { to: email, cc: '', bcc: '', subject: '', body: '' };
+          try {
+            chrome.runtime.sendMessage({
+              action: 'intercept_mailto',
+              data: parsedData
+            });
+          } catch (e) {
+            console.error('[MailLayer] Message failed:', e);
+          }
+        }
+      }, true);
+    }
+  });
+}
+
+// Call on load
+initMagicUX();

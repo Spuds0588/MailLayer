@@ -17,11 +17,14 @@ const saveOptions = () => {
         const signature = signatureQuill ? signatureQuill.root.innerHTML : (existingSettings.signature || '');
         const preferredEditor = activeEditor.dataset.value;
         const preferredProvider = activeProvider.dataset.value;
+        const activeMagicUX = document.querySelector('[data-id="magicUX"] .is-active');
+        const magicUX = activeMagicUX ? activeMagicUX.dataset.value : 'disabled';
 
         const newSettings = { 
             ...existingSettings,
             preferredEditor, 
             preferredProvider, 
+            magicUX,
             signature,
             templates // Ensure templates are preserved
         };
@@ -45,6 +48,7 @@ const restoreOptions = () => {
             templates = result.settings.templates || [];
             setGroupActive('preferredEditor', result.settings.preferredEditor || 'modal');
             setGroupActive('preferredProvider', result.settings.preferredProvider || 'gmail_web');
+            setGroupActive('magicUX', result.settings.magicUX || 'disabled');
             if (signatureQuill && result.settings.signature) {
                 signatureQuill.clipboard.dangerouslyPasteHTML(result.settings.signature);
             }

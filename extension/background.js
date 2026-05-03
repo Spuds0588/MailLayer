@@ -14,6 +14,12 @@ let settings = DEFAULT_SETTINGS;
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('[MailLayer Background] Extension installed/updated.');
   
+  chrome.contextMenus.create({
+    id: "maillayer-email-selection",
+    title: "Email '%s' with MailLayer",
+    contexts: ["selection"]
+  });
+
   chrome.storage.local.get(['settings'], (result) => {
     if (!result.settings) {
       chrome.storage.local.set({ settings: DEFAULT_SETTINGS }, () => {
@@ -39,6 +45,39 @@ chrome.storage.onChanged.addListener((changes) => {
 // Load settings on startup
 chrome.storage.local.get(['settings'], (result) => {
   if (result.settings) settings = result.settings;
+});
+
+// Context Menu Click Handler
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "maillayer-email-selection") {
+    const selectedText = info.selectionText.trim();
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (emailRegex.test(selectedText)) {
+      const mailtoData = {
+        to: selectedText,
+        cc: '',
+        bcc: '',
+        subject: '',
+        body: ''
+      };
+
+      if (settings.preferredEditor === 'sidebar') {
+        chrome.sidePanel.open({ tabId: tab.id }).catch(err => {
+          console.error('[MailLayer Background] sidePanel.open failed from context menu:', err);
+        });
+      }
+
+      handleMessage({ action: 'intercept_mailto', data: mailtoData }, { tab: tab })
+        .catch(err => console.error('[MailLayer Background] Context Menu Error:', err));
+    } else {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => alert("MailLayer: The selected text does not appear to be a valid email address.")
+      }).catch(err => console.error('[MailLayer Background] Script execution failed:', err));
+    }
+  }
 });
 
 // Standardized response helper
