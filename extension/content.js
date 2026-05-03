@@ -82,6 +82,46 @@ function escapeHTML(str) {
 function openModal(data) {
   if (document.getElementById('maillayer-modal-root')) return;
 
+  // Track stylesheets to ensure no flash of unstyled content
+  let pendingStyles = 0;
+
+  const onStyleLoaded = () => {
+    pendingStyles--;
+    if (pendingStyles <= 0) {
+      injectModalDOM(data);
+    }
+  };
+
+  // Inject Styles into Head and wait for load
+  if (!document.getElementById('maillayer-styles')) {
+    pendingStyles++;
+    const modalStyle = document.createElement('link');
+    modalStyle.id = 'maillayer-styles';
+    modalStyle.rel = 'stylesheet';
+    modalStyle.href = chrome.runtime.getURL('modal.css');
+    modalStyle.onload = onStyleLoaded;
+    document.head.appendChild(modalStyle);
+  }
+
+  if (!document.getElementById('quill-styles')) {
+    pendingStyles++;
+    const quillStyle = document.createElement('link');
+    quillStyle.id = 'quill-styles';
+    quillStyle.rel = 'stylesheet';
+    quillStyle.href = chrome.runtime.getURL('vendor/quill/quill.snow.css');
+    quillStyle.onload = onStyleLoaded;
+    document.head.appendChild(quillStyle);
+  }
+
+  // If already loaded, render immediately
+  if (pendingStyles === 0) {
+    injectModalDOM(data);
+  }
+}
+
+function injectModalDOM(data) {
+  if (document.getElementById('maillayer-modal-root')) return;
+
   const container = document.createElement('div');
   container.id = 'maillayer-modal-root';
   document.body.appendChild(container);
@@ -160,23 +200,6 @@ function openModal(data) {
       </div>
     </div>
   `;
-
-  // Inject Styles into Head
-  if (!document.getElementById('maillayer-styles')) {
-    const modalStyle = document.createElement('link');
-    modalStyle.id = 'maillayer-styles';
-    modalStyle.rel = 'stylesheet';
-    modalStyle.href = chrome.runtime.getURL('modal.css');
-    document.head.appendChild(modalStyle);
-  }
-
-  if (!document.getElementById('quill-styles')) {
-    const quillStyle = document.createElement('link');
-    quillStyle.id = 'quill-styles';
-    quillStyle.rel = 'stylesheet';
-    quillStyle.href = chrome.runtime.getURL('vendor/quill/quill.snow.css');
-    document.head.appendChild(quillStyle);
-  }
 
   const closeModal = () => container.remove();
   container.querySelector('.maillayer-close-btn').onclick = closeModal;
