@@ -152,20 +152,20 @@ function injectModalDOM(data) {
                 <div class="maillayer-input-cell">
                     <input type="text" id="ml-to" value="${escapeHTML(data.to)}">
                     <div class="maillayer-field-toggles">
-                        <span id="ml-toggle-cc">CC</span>
-                        <span id="ml-toggle-bcc">BCC</span>
+                        <span id="ml-toggle-cc" style="${data.cc ? 'display:none;' : ''}">CC</span>
+                        <span id="ml-toggle-bcc" style="${data.bcc ? 'display:none;' : ''}">BCC</span>
                     </div>
                 </div>
             </div>
             
-            <div class="maillayer-row" id="ml-cc-row" style="${data.cc ? '' : 'display:none;'}">
+            <div class="maillayer-row" id="ml-cc-row" style="${data.cc ? '' : 'display:none !important;'}">
                 <div class="maillayer-label-cell">CC</div>
                 <div class="maillayer-input-cell">
                     <input type="text" id="ml-cc" value="${escapeHTML(data.cc || '')}">
                 </div>
             </div>
 
-            <div class="maillayer-row" id="ml-bcc-row" style="${data.bcc ? '' : 'display:none;'}">
+            <div class="maillayer-row" id="ml-bcc-row" style="${data.bcc ? '' : 'display:none !important;'}">
                 <div class="maillayer-label-cell">BCC</div>
                 <div class="maillayer-input-cell">
                     <input type="text" id="ml-bcc" value="${escapeHTML(data.bcc || '')}">
@@ -184,7 +184,7 @@ function injectModalDOM(data) {
             </div>
             <div id="ml-attachments-list" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
         </div>
-        <div class="maillayer-footer">
+        <div class="maillayer-footer" style="align-items: flex-start;">
             <div style="display:flex; gap: 8px; align-items:center;">
                 <button class="maillayer-btn-icon" id="ml-attach-btn" title="Attach Files">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="#eee">
@@ -194,14 +194,40 @@ function injectModalDOM(data) {
                 <input type="file" id="ml-file-input" multiple style="display:none;">
             </div>
             <div style="flex:1"></div>
-            <button class="maillayer-btn maillayer-btn-secondary close-action">Discard</button>
-            <button class="maillayer-btn maillayer-btn-primary">Send Email</button>
+            
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                <button class="maillayer-btn maillayer-btn-secondary close-action" style="display:flex; align-items:center; gap:8px;">
+                    <img src="${chrome.runtime.getURL('Icons/discard.svg')}" width="16" height="16" style="filter: brightness(0) invert(0.7);" alt="Discard"> Discard
+                </button>
+                <span style="color:#6b7280; font-size:11px; font-style:italic;">Esc</span>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                <button class="maillayer-btn maillayer-btn-primary" style="display:flex; align-items:center; gap:8px;">
+                    <img src="${chrome.runtime.getURL('Icons/send.svg')}" width="16" height="16" style="filter: brightness(0) invert(1);" alt="Send"> Send
+                </button>
+                <span id="ml-send-hint" style="color:#6b7280; font-size:11px; font-style:italic;"></span>
+            </div>
         </div>
       </div>
     </div>
   `;
 
-  const closeModal = () => container.remove();
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeModal();
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      container.querySelector('.maillayer-btn-primary').click();
+    }
+  };
+  document.addEventListener('keydown', handleKeyDown);
+
+  const closeModal = () => {
+    document.removeEventListener('keydown', handleKeyDown);
+    container.remove();
+  };
   container.querySelector('.maillayer-close-btn').onclick = closeModal;
   container.querySelector('.close-action').onclick = closeModal;
 
@@ -211,11 +237,32 @@ function injectModalDOM(data) {
   const ccRow = container.querySelector('#ml-cc-row');
   const bccRow = container.querySelector('#ml-bcc-row');
 
+  const ccInput = container.querySelector('#ml-cc');
+  const bccInput = container.querySelector('#ml-bcc');
+
   toggleCC.onclick = () => {
-    ccRow.style.display = ccRow.style.display === 'none' ? 'flex' : 'none';
+    ccRow.style.setProperty('display', 'flex', 'important');
+    toggleCC.style.setProperty('display', 'none', 'important');
+    ccInput.focus();
   };
   toggleBCC.onclick = () => {
-    bccRow.style.display = bccRow.style.display === 'none' ? 'flex' : 'none';
+    bccRow.style.setProperty('display', 'flex', 'important');
+    toggleBCC.style.setProperty('display', 'none', 'important');
+    bccInput.focus();
+  };
+
+  ccInput.onblur = () => {
+    if (!ccInput.value.trim()) {
+      ccRow.style.setProperty('display', 'none', 'important');
+      toggleCC.style.setProperty('display', '', 'important');
+    }
+  };
+
+  bccInput.onblur = () => {
+    if (!bccInput.value.trim()) {
+      bccRow.style.setProperty('display', 'none', 'important');
+      toggleBCC.style.setProperty('display', '', 'important');
+    }
   };
 
   // Initialize Quill
@@ -231,6 +278,14 @@ function injectModalDOM(data) {
       ]
     }
   });
+
+  // Remove text formatting options from tab order to speed up keyboard navigation
+  const toolbarControls = container.querySelectorAll('.ql-toolbar button, .ql-toolbar .ql-picker-label');
+  toolbarControls.forEach(control => control.setAttribute('tabindex', '-1'));
+
+  const isMac = navigator.userAgent.toUpperCase().indexOf('MAC') >= 0;
+  const sendKey = isMac ? 'Cmd + Enter' : 'Ctrl + Enter';
+  container.querySelector('#ml-send-hint').innerText = sendKey;
 
   if (data.body) {
     quill.clipboard.dangerouslyPasteHTML(data.body);
@@ -422,11 +477,13 @@ function injectModalDOM(data) {
       if (tpl.subject) container.querySelector('#ml-subject').value = tpl.subject;
       if (tpl.cc) {
           container.querySelector('#ml-cc').value = tpl.cc;
-          container.querySelector('#ml-cc-row').style.display = 'flex';
+          container.querySelector('#ml-cc-row').style.setProperty('display', 'flex', 'important');
+          container.querySelector('#ml-toggle-cc').style.setProperty('display', 'none', 'important');
       }
       if (tpl.bcc) {
           container.querySelector('#ml-bcc').value = tpl.bcc;
-          container.querySelector('#ml-bcc-row').style.display = 'flex';
+          container.querySelector('#ml-bcc-row').style.setProperty('display', 'flex', 'important');
+          container.querySelector('#ml-toggle-bcc').style.setProperty('display', 'none', 'important');
       }
       if (tpl.body) {
           let newBody = tpl.body;
