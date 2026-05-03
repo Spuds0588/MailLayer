@@ -16,7 +16,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   
   chrome.contextMenus.create({
     id: "maillayer-email-selection",
-    title: "Email '%s' with MailLayer",
+    title: "Send Email",
     contexts: ["selection"]
   });
 
@@ -50,18 +50,15 @@ chrome.storage.local.get(['settings'], (result) => {
 // Context Menu Click Handler
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "maillayer-email-selection") {
-    const selectedText = info.selectionText.trim();
-    // Basic email validation regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const selectedText = info.selectionText ? info.selectionText.trim() : '';
+    const mailtoData = { to: '', cc: '', bcc: '', subject: '', body: '' };
+
+    // Extract email from selection using regex
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+    const match = selectedText.match(emailRegex);
     
-    if (emailRegex.test(selectedText)) {
-      const mailtoData = {
-        to: selectedText,
-        cc: '',
-        bcc: '',
-        subject: '',
-        body: ''
-      };
+    if (match && match[0]) {
+      mailtoData.to = match[0];
 
       if (settings.preferredEditor === 'sidebar') {
         chrome.sidePanel.open({ tabId: tab.id }).catch(err => {
@@ -74,7 +71,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     } else {
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: () => alert("MailLayer: The selected text does not appear to be a valid email address.")
+        func: () => alert("MailLayer: Could not find a valid email address in the selected text.")
       }).catch(err => console.error('[MailLayer Background] Script execution failed:', err));
     }
   }
