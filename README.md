@@ -6,9 +6,9 @@ MailLayer is a Chrome extension that creates a **universal email layer** over yo
 
 ## 🔗 Links
 
-- [Home Page](https://spuds0588.github.io/MailLayer/index.html)
-- [Privacy Policy](https://spuds0588.github.io/MailLayer/privacy.html)
-- [Terms of Service](https://spuds0588.github.io/MailLayer/terms.html)
+- [Home Page](https://maillayer.wiki/index.html)
+- [Privacy Policy](https://maillayer.wiki/privacy.html)
+- [Terms of Service](https://maillayer.wiki/terms.html)
 - [Chrome Web Store](https://chrome.google.com/webstore/detail/cdkbfdlipmopkdfjbceadindobfpajma)
 
 ## 🚀 Key Features
